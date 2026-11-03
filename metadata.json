@@ -1,0 +1,6 @@
+{
+  "name": "Canabis Hub – Premium German Cannabis Platform & Directory",
+  "description": "Explore certified cannabis brands, artisanal flower farms, laboratory purity standards, and educational resources across Germany.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
