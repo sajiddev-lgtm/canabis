@@ -89,21 +89,31 @@ export const MEGA_MENU_DATA: MegaMenuColumn[] = [
 
 export interface ProductItem {
   id: string;
+  sku?: string;
   name: string;
   brand: string;
   brandSlug: string;
   category: string;
   categorySlug: string;
+  type?: 'informational' | 'permitted_merchandise';
+  price?: number;
+  inStock?: boolean;
   image: string;
-  strainType: 'Sativa' | 'Indica' | 'Hybrid' | 'Broad Spectrum' | 'Isolate';
-  thc: string;
-  cbd: string;
-  terpenes: string[];
+  gallery?: string[];
+  strainType?: 'Sativa' | 'Indica' | 'Hybrid' | 'Broad Spectrum' | 'Isolate';
+  thc?: string;
+  cbd?: string;
+  terpenes?: string[];
   description: string;
-  effects: string[];
-  aroma: string;
-  labBatch: string;
-  origin: string;
+  short_description?: string;
+  effects?: string[];
+  aroma?: string;
+  labBatch?: string;
+  origin?: string;
+  badge?: 'New' | 'Featured' | 'Popular';
+  isFeatured?: boolean;
+  specifications?: Record<string, string>;
+  faq?: { question: string; answer: string }[];
 }
 
 export const CATEGORIES_DATA = [
@@ -140,6 +150,22 @@ export const CATEGORIES_DATA = [
     image: '/src/assets/images/delivery_fleet_retail_1793700802596.jpg',
   },
   {
+    id: 'accessories',
+    name: 'Accessories & Storage',
+    slug: 'accessories',
+    count: '24 Curated Essentials',
+    description: 'Biophotonic violet glass, precision 0.01g scales, aerospace grinders, and terpene shields.',
+    image: '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+  },
+  {
+    id: 'apparel',
+    name: 'Apparel & Lifestyle',
+    slug: 'apparel',
+    count: '8 Hemp Goods',
+    description: 'Sustainably woven organic European hemp canvas totes, barista aprons, and tasting journals.',
+    image: '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+  },
+  {
     id: 'tinctures',
     name: 'Tinctures & Drops',
     slug: 'tinctures',
@@ -158,149 +184,979 @@ export const CATEGORIES_DATA = [
 ];
 
 export const PRODUCTS_DATA: ProductItem[] = [
+  // --- 1. Informational Cannabis Cultivars & Concentrates (Non-Commercial Monographs) ---
   {
     id: 'prod-1',
+    sku: 'MONO-GELATO-33',
     name: 'Albatross Gelato #33 Reserve',
     brand: 'Albatross',
     brandSlug: 'albatross',
     category: 'Premium Flower',
     categorySlug: 'flower',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'Featured',
+    isFeatured: true,
     image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
+    gallery: [
+      '/src/assets/images/product_premium_flower_1793700802879.jpg',
+      '/src/assets/images/hero_cannabis_dispensary_1793700801902.jpg',
+    ],
     strainType: 'Hybrid',
     thc: '24.2%',
     cbd: '< 0.5%',
     terpenes: ['Caryophyllene', 'Limonene', 'Linalool'],
-    description: 'Hand-manicured dense calyxes with rich royal purple undertones. Delivers sweet citrus and earthy dessert aromas.',
+    description: 'Hand-manicured dense calyxes with rich royal purple undertones. Delivers sweet citrus and earthy dessert aromas, cultivated in Bavarian alpine greenhouses using living organic soil.',
+    short_description: 'Sunset Sherbet x Thin Mint GSC phenotype cold-cured for 21 days.',
     effects: ['Relaxed', 'Focused', 'Balanced'],
     aroma: 'Sweet berry, creamy vanilla, earthy pine',
     labBatch: 'DE-LAB-2026-9041',
     origin: 'Bavarian Alps Indoor Facility, Germany',
+    specifications: {
+      'Genetics': 'Sunset Sherbet x Thin Mint GSC',
+      'Cultivation Method': 'Organic Living Soil (Indoor High-PPFD LED)',
+      'Curing Duration': '21 Days Glass Jar Cold-Cure (16°C / 58% RH)',
+      'Heavy Metals Analysis': 'ND (Not Detected, ICP-MS)',
+      'Pesticide Screen': '100% Free (LC-MS/MS 90+ Target Analytes)',
+      'Accredited Lab': 'Institut Fresenius Agro-Analytics GmbH',
+    },
+    faq: [
+      {
+        question: 'Is this product available for direct mail-order purchase?',
+        answer: 'No. In strict compliance with the German Cannabis Act (CanG), whole-flower cannabis monographs are indexed purely for educational and laboratory accreditation purposes. Commercial mail-order transactions are legally prohibited.'
+      },
+      {
+        question: 'How was the terpene profile verified?',
+        answer: 'The batch was analyzed via Headspace Gas Chromatography coupled with Flame Ionization Detection (HS-GC-FID) following European Pharmacopoeia botanical monograph procedures.'
+      }
+    ]
   },
   {
     id: 'prod-2',
+    sku: 'MONO-COSMIC-ROSIN',
     name: 'Cosmic Diamond Live Rosin',
     brand: 'Cosmic Concentrates',
     brandSlug: 'cosmic-concentrates',
     category: 'Pure Concentrates',
     categorySlug: 'concentrates',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'Popular',
+    isFeatured: true,
     image: '/src/assets/images/product_extract_concentrate_1793700803077.jpg',
+    gallery: [
+      '/src/assets/images/product_extract_concentrate_1793700803077.jpg',
+      '/src/assets/images/hero_lab_testing_1793700802431.jpg',
+    ],
     strainType: 'Indica',
     thc: '78.5%',
     cbd: '1.2%',
     terpenes: ['Myrcene', 'Humulene', 'Pinene'],
-    description: 'Solventless cold-cured live hash rosin pressed from ice water bubble hash. Preserves high monoterpene fractions.',
+    description: 'Solventless cold-cured live hash rosin pressed from ice water bubble hash (73µ–119µ). Preserves high monoterpene fractions with zero hydrocarbons.',
+    short_description: 'First-wash 73µ-119µ solventless hash rosin cold-cured to room temperature.',
     effects: ['Deep Calming', 'Unwinding', 'Physical Ease'],
     aroma: 'Ripe mango, pungent fuel, herbal spice',
     labBatch: 'DE-LAB-2026-8812',
     origin: 'Berlin Precision Extraction Lab',
+    specifications: {
+      'Extraction Technique': 'Ice-Water Agitation & Heat-Press (Zero Solvents)',
+      'Micron Filter Range': '73-micron to 119-micron heads',
+      'Residual Solvent Test': 'Zero (Pure Mechanical Separation)',
+      'Total Cannabinoids': '84.6% Active Profile',
+      'Batch Verification': 'DIN EN ISO/IEC 17025 Certified',
+    },
+    faq: [
+      {
+        question: 'What distinguishes cold-cured rosin from standard extracts?',
+        answer: 'Cold-curing stabilizes volatile aromatic terpenes under sealed temperatures, resulting in an opaque, buttery badder consistency without terpene evaporation.'
+      }
+    ]
   },
   {
     id: 'prod-3',
+    sku: 'MONO-POLAR-KUSH',
     name: 'Frost Factory Polar Night Kush',
     brand: 'Frost Factory',
     brandSlug: 'frost-factory',
     category: 'Premium Flower',
     categorySlug: 'flower',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'New',
     image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
     strainType: 'Indica',
     thc: '26.8%',
     cbd: '< 0.2%',
     terpenes: ['Beta-Myrcene', 'Bisabolol', 'Nerolidol'],
-    description: 'Ultra-frosted trichome coverage with tight flower density. Cultivated under high-efficiency LED broad-spectrum lighting.',
+    description: 'Ultra-frosted trichome coverage with tight flower density. Cultivated under high-efficiency LED broad-spectrum lighting in Black Forest climate-controlled chambers.',
+    short_description: 'High-density indica cultivar with heavy trichome heads and forest aroma.',
     effects: ['Sedating', 'Euphoric Body Calm', 'Nighttime Rest'],
     aroma: 'Pine forest, fresh soil, subtle cedar',
     labBatch: 'DE-LAB-2026-7734',
     origin: 'Black Forest Cultivation Facility',
+    specifications: {
+      'Genetics': 'Pure Afghan Indica Phenotype',
+      'Moisture Content': '11.8% (Target 10-12%)',
+      'Water Activity (aw)': '0.59 aw (Stable against microbial growth)',
+      'Origin': 'Baden-Württemberg, Germany',
+    }
   },
   {
     id: 'prod-4',
+    sku: 'MONO-STRAIGHT-CART',
     name: 'Straight Goods Live Resin Vape Cartridge',
     brand: 'Straight Goods',
     brandSlug: 'straight-goods',
     category: 'Vaporizers & Pods',
     categorySlug: 'vapes',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'Popular',
     image: '/src/assets/images/delivery_fleet_retail_1793700802596.jpg',
     strainType: 'Sativa',
     thc: '74.0%',
     cbd: '0.8%',
     terpenes: ['Terpinolene', 'Ocimene', 'Limonene'],
-    description: 'Pristine full-spectrum extract in a 510-threaded medical grade porous ceramic cartridge. No botanical thinning agents.',
+    description: 'Pristine full-spectrum extract in a 510-threaded medical grade porous ceramic cartridge. Formulated without botanical thinning agents or synthetic carriers.',
+    short_description: 'Single-source live resin distillate in lead-free ceramic hardware.',
     effects: ['Uplifted', 'Creative Clarity', 'Daytime Energy'],
     aroma: 'Bright Meyer lemon, floral zest, herbal tea',
     labBatch: 'DE-LAB-2026-6190',
     origin: 'Munich Cleanroom Bottling',
+    specifications: {
+      'Cartridge Thread': 'Universal 510 Thread Medical Brass & Ceramic',
+      'Wick Core': 'Porous Silicon Dioxide Ceramic',
+      'Heavy Metals Leach Test': 'Pass (Below EU Limits for Pb, Cd, As, Hg)',
+    }
   },
   {
     id: 'prod-5',
+    sku: 'MONO-BLISS-DROPS',
     name: 'Bliss Botanical Micro-Dose Pectin Drops',
     brand: 'Bliss',
     brandSlug: 'bliss',
     category: 'Artisanal Edibles',
     categorySlug: 'edibles',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'New',
     image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
     strainType: 'Hybrid',
     thc: '5 mg/pc',
     cbd: '10 mg/pc',
     terpenes: ['Limonene', 'Linalool'],
-    description: 'Vegan non-gelatin fruit pectin lozenges infused with water-soluble nano-emulsified broad-spectrum botanical cannabinoids.',
+    description: 'Vegan non-gelatin fruit pectin lozenges infused with water-soluble nano-emulsified broad-spectrum botanical cannabinoids and natural elderberry extract.',
+    short_description: 'Vegan elderberry lozenges formulated for predictable gastric uptake.',
     effects: ['Gentle Mood Lift', 'Social Comfort', 'Zero Fog'],
     aroma: 'Wild raspberry, hibiscus tea, elderflower',
     labBatch: 'DE-LAB-2026-5521',
     origin: 'Hamburg Confectionery Apothecary',
+    specifications: {
+      'Active Ratio': '1:2 THC:CBD Nano-Emulsified',
+      'Carrier': 'Fruit Pectin & Organic Agave (Gelatin-Free)',
+      'Onset Time': '15-25 minutes bio-availability',
+    }
   },
   {
     id: 'prod-6',
+    sku: 'MONO-SOUR-TANGIE',
     name: 'Cream of the Crop Sour Tangie Heirloom',
     brand: 'Cream of the Crop',
     brandSlug: 'cream-of-the-crop',
     category: 'Premium Flower',
     categorySlug: 'flower',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'Popular',
     image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
     strainType: 'Sativa',
     thc: '22.4%',
     cbd: '< 0.4%',
     terpenes: ['Valencene', 'Limonene', 'Caryophyllene'],
-    description: 'Classic California heirloom genetics adapted to European organic soil greenhouse beds. Exuberant tangerine fragrance.',
+    description: 'Classic California heirloom genetics adapted to European organic soil greenhouse beds. Exuberant tangerine fragrance with sparkling amber trichomes.',
+    short_description: 'Heirloom sativa canopy flower rich in natural valencene citrus notes.',
     effects: ['Motivated', 'Social Ease', 'Vibrant Energy'],
     aroma: 'Mandarin peel, sour diesel, candied orange',
     labBatch: 'DE-LAB-2026-4418',
     origin: 'Rhineland Sunlight Greenhouse',
+    specifications: {
+      'Phenotype Hunt': 'Selection #7 from 120 seedlings',
+      'Total Terpene Mass': '3.4% Dry Weight',
+      'Soil Composition': 'Living Compost Soil + Mycorrhizae',
+    }
   },
   {
     id: 'prod-7',
+    sku: 'MONO-HEX-SAUCE',
     name: 'HEX Extracts Full Spectrum Amber Terp Sauce',
     brand: 'HEX Extracts',
     brandSlug: 'hex-extracts',
     category: 'Pure Concentrates',
     categorySlug: 'concentrates',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'Featured',
     image: '/src/assets/images/product_extract_concentrate_1793700803077.jpg',
     strainType: 'Hybrid',
     thc: '81.2%',
     cbd: '2.4%',
     terpenes: ['Farnesene', 'Myrcene', 'Geraniol'],
-    description: 'High-terpene extract fraction layered with micro-crystallized cannabinoid facets. Exceptional viscosity and bouquet.',
+    description: 'High-terpene extract fraction layered with micro-crystallized cannabinoid facets. Exceptional viscosity and vivid botanical bouquet.',
+    short_description: 'High terpene extract (HTE) with micro-faceted cannabinoid crystals.',
     effects: ['Dynamic Euphoria', 'Sensory Depth', 'Relaxation'],
     aroma: 'Crushed pine needles, tropical fruit, black pepper',
     labBatch: 'DE-LAB-2026-3910',
     origin: 'Leipzig Analytical Center',
+    specifications: {
+      'Extraction System': 'Sub-Zero Closed-Loop Hydrocarbon Phase',
+      'Fraction Ratio': '60% THCA Diamonds / 40% Terpene Liquid',
+    }
   },
   {
     id: 'prod-8',
+    sku: 'MONO-BURN-POD',
     name: 'Burn All-Ceramic Terpene Pod 1.0ml',
     brand: 'Burn',
     brandSlug: 'burn',
     category: 'Vaporizers & Pods',
     categorySlug: 'vapes',
+    type: 'informational',
+    price: 0,
+    inStock: true,
+    badge: 'New',
     image: '/src/assets/images/hero_lab_testing_1793700802431.jpg',
     strainType: 'Hybrid',
     thc: '76.8%',
     cbd: '1.5%',
     terpenes: ['Alpha-Pinene', 'Caryophyllene Oxide', 'Camphene'],
-    description: 'Proprietary button-activated vapor pod engineered with lead-free biocompatible ceramic heating elements.',
+    description: 'Proprietary button-activated vapor pod engineered with lead-free biocompatible ceramic heating elements for unadulterated terpene evaporation.',
+    short_description: 'Biocompatible ceramic pod hardware with isolated airflow channel.',
     effects: ['Smooth Calming', 'Crisp Clarity', 'Fast Onset'],
     aroma: 'Earthy pine, spearmint, damp cedar',
     labBatch: 'DE-LAB-2026-2009',
     origin: 'Stuttgart Precision Hardware Tech',
+    specifications: {
+      'Chamber Capacity': '1.0 ml',
+      'Resistance': '1.4 Ohm',
+      'Airflow Path': 'Isolated 100% Medical Ceramic',
+    }
+  },
+
+  // --- 2. Lawful Non-Controlled Botanical Merchandise & Accessories (24 Permitted Items) ---
+  {
+    id: 'acc-1',
+    sku: 'ACC-GLASS-JAR-3PK',
+    name: 'German Botanical Violet Glass Curing Jars (3-Pack)',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 34.50,
+    inStock: true,
+    badge: 'Popular',
+    isFeatured: true,
+    image: '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+    gallery: [
+      '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+      '/src/assets/images/acc_ceramic_stash_1793782438469.jpg',
+    ],
+    description: 'Biophotonic Miron violet glass containers blocking the complete visible light spectrum while admitting beneficial UV-A and infrared frequencies for optimal terpene aging and trichome preservation.',
+    short_description: '3x 250ml Miron violet glass curing jars with airtight matte lids.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-01',
+    specifications: {
+      'Volume Capacity': '3x 250ml (approx. 15g cured herb each)',
+      'Material': 'Authentic Biophotonic Miron Violet Glass',
+      'Closure': 'BPA-Free Polypropylene Airtight Lid with Violet Liner',
+      'Light Transmission': 'Blocks 400-700nm; Permits 380-420nm (UV-A) & 750-1050nm (IR)',
+      'Origin': 'Made in Bavaria, Germany',
+      'Care': 'Dishwasher safe body; wipe lid with damp cloth',
+    },
+    faq: [
+      {
+        question: 'Why is Miron violet glass superior to clear or amber glass?',
+        answer: 'Violet glass acts as a natural physical filter that prevents photochemical degradation caused by visible light rays, dramatically slowing oxidation and keeping volatile terpenes fragrant for over 12 months.'
+      },
+      {
+        question: 'Are the lids 100% airtight and odor-resistant?',
+        answer: 'Yes, each lid incorporates a specialized expanded polyethylene sealing disc that provides a hermetic barrier against moisture and air ingress.'
+      }
+    ]
+  },
+  {
+    id: 'acc-2',
+    sku: 'ACC-BOVEDA-62',
+    name: 'Terpene Shield Humidity Packs 62% RH (10-Pack)',
+    brand: 'Boveda Scientific',
+    brandSlug: 'boveda-scientific',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 18.90,
+    inStock: true,
+    badge: 'Popular',
+    isFeatured: true,
+    image: '/src/assets/images/acc_terpene_shield_1793782438993.jpg',
+    gallery: [
+      '/src/assets/images/acc_terpene_shield_1793782438993.jpg',
+    ],
+    description: 'Patented 2-way humidity control technology creating a monolayer of purified water vapor over trichomes to prevent evaporation of volatile terpenes in storage jars.',
+    short_description: 'Size 8g humidity regulators for botanical curing containers.',
+    origin: 'Hamburg, Germany',
+    labBatch: 'DE-ACC-2026-02',
+    specifications: {
+      'Target Humidity': '62% Relative Humidity (RH)',
+      'Quantity': '10 sealed packets (Size 8g each)',
+      'Active Ingredients': 'Food-Grade Natural Salts and Pure Water',
+      'Container Fit': 'Each pack conditions up to 30g of dried botanicals',
+      'Lifespan': '2 to 4 months in an airtight jar (replaces when rigid)',
+    },
+    faq: [
+      {
+        question: 'How do I know when to replace the humidity pack?',
+        answer: 'When the packet loses its soft, pliable texture and feels rigid or crunchy to the touch, it is fully spent and should be replaced.'
+      }
+    ]
+  },
+  {
+    id: 'acc-3',
+    sku: 'ACC-SCALE-DIGITAL',
+    name: 'Precision Analytical Botanical Scale 0.01g',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 49.00,
+    inStock: true,
+    badge: 'Featured',
+    isFeatured: true,
+    image: '/src/assets/images/acc_digital_scale_1793782422379.jpg',
+    gallery: [
+      '/src/assets/images/acc_digital_scale_1793782422379.jpg',
+    ],
+    description: 'High-precision strain gauge sensor with backlit LCD, stainless steel platform, tare function, and 100g calibration weight for accurate botanical compounding.',
+    short_description: '0.01g to 500g digital pocket laboratory scale with tare function.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-03',
+    specifications: {
+      'Measurement Range': '0.01g to 500g',
+      'Accuracy Tolerance': '± 0.02g across linear range',
+      'Platform Material': 'Brushed SUS304 Food-Grade Stainless Steel',
+      'Display': 'High-Contrast Blue Backlit Inverse LCD',
+      'Units': 'Grams (g), Ounces (oz), Carats (ct), Grains (gn)',
+      'Power': '2x AAA Alkaline Batteries (included)',
+      'Warranty': '3 Years Manufacturer Replacement Warranty',
+    },
+    faq: [
+      {
+        question: 'Does the scale come pre-calibrated?',
+        answer: 'Yes, each unit undergoes factory calibration in Stuttgart and includes an F1-class 100g stainless steel test weight for periodic zeroing.'
+      }
+    ]
+  },
+  {
+    id: 'acc-4',
+    sku: 'ACC-TOTE-ORGANIC',
+    name: 'Canabis Hub Heavyweight Organic Hemp Tote',
+    brand: 'Canabis Hub Apparel',
+    brandSlug: 'canabis-hub-apparel',
+    category: 'Apparel & Lifestyle',
+    categorySlug: 'apparel',
+    type: 'permitted_merchandise',
+    price: 24.00,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    ],
+    description: 'Crafted from 100% European unbleached organic hemp canvas with reinforced cross-stitching and screenprinted botanical typography.',
+    short_description: 'Heavyweight organic hemp canvas tote with internal zippered pocket.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-04',
+    specifications: {
+      'Fabric Weight': '14 oz / 480 GSM Heavyweight Raw Canvas',
+      'Fiber Content': '100% Certified Organic European Industrial Hemp',
+      'Dimensions': '42cm x 38cm x 12cm gusset with 65cm reinforced straps',
+      'Internal Features': 'Zippered pocket for keys, cards, and stash tins',
+      'Care': 'Machine wash cold on gentle cycle; air dry flat',
+    }
+  },
+  {
+    id: 'acc-5',
+    sku: 'ACC-GRIND-AERO-63',
+    name: 'AeroPrecision 63mm 4-Piece CNC Herb Grinder (Gunmetal)',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 42.00,
+    inStock: true,
+    badge: 'Popular',
+    isFeatured: true,
+    image: '/src/assets/images/acc_aerospace_grinder_1793782406067.jpg',
+    gallery: [
+      '/src/assets/images/acc_aerospace_grinder_1793782406067.jpg',
+    ],
+    description: 'CNC machined from a solid billet of 6061-T6 aircraft-grade aluminum. Features curved diamond cutting teeth that shear without pulverizing delicate trichome glands, a removable 50-micron stainless steel sifter screen, and rare-earth neodymium magnetic closure.',
+    short_description: '63mm 4-piece aerospace-grade aluminum botanical grinder.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-05',
+    specifications: {
+      'Diameter': '63mm (2.5 inches) / Height: 48mm',
+      'Material': 'Billet CNC 6061-T6 Anodized Aluminum',
+      'Tooth Pattern': 'Double-Beveled Curved Diamond Teeth (28 top / 24 base)',
+      'Sieve Screen': '50 Micron (300 Mesh) SUS304 Stainless Steel',
+      'Coating': 'Type II Hard-Anodized Gunmetal Matte Finish (Lead-Free)',
+      'Included': 'Precision Delrin pollen scraper tool',
+    },
+    faq: [
+      {
+        question: 'Does aluminum dust shave off into the botanical material?',
+        answer: 'No. The grinder is hard-anodized and fitted with a low-friction Delrin glide ring that prevents metal-on-metal friction and ensures smooth, shavings-free operation.'
+      }
+    ]
+  },
+  {
+    id: 'acc-6',
+    sku: 'ACC-TRAY-WALNUT-M',
+    name: 'Solid Black Walnut Botanical Rolling Tray with Brass Inlay',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 68.00,
+    inStock: true,
+    badge: 'Featured',
+    isFeatured: true,
+    image: '/src/assets/images/acc_walnut_rolling_tray_1793782406133.jpg',
+    gallery: [
+      '/src/assets/images/acc_walnut_rolling_tray_1793782406133.jpg',
+    ],
+    description: 'Sculpted from sustainably sourced solid European black walnut. Features precision-routed curved corners for spill-free botanical gathering, an integrated solid brass magnetic dispensing scraper, and dedicated slots for papers and glass tips.',
+    short_description: 'Handcrafted Bavarian black walnut tray with solid brass accessories.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-06',
+    specifications: {
+      'Dimensions': '28cm x 18cm x 2.2cm',
+      'Timber': 'FSC-Certified Solid European Black Walnut',
+      'Finish': 'Hand-Rubbed Organic Linseed Oil & German Beeswax',
+      'Metal Inlay': 'Brushed C26000 Cartridge Brass',
+      'Craftsmanship': 'Milled and hand-sanded in small batches in Upper Bavaria',
+    },
+    faq: [
+      {
+        question: 'How should I condition the walnut wood over time?',
+        answer: 'We recommend applying a drop of food-grade mineral oil or walnut wood balm every 6 to 12 months to maintain the deep rich luster of the grain.'
+      }
+    ]
+  },
+  {
+    id: 'acc-7',
+    sku: 'ACC-CASE-CARBON-LOCK',
+    name: 'Carbon-Shield Smell-Proof Travel Case with TSA Lock',
+    brand: 'Berlin Craft Labs',
+    brandSlug: 'berlin-craft-labs',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 54.00,
+    inStock: true,
+    badge: 'Featured',
+    isFeatured: true,
+    image: '/src/assets/images/acc_smellproof_case_1793782406807.jpg',
+    gallery: [
+      '/src/assets/images/acc_smellproof_case_1793782406807.jpg',
+    ],
+    description: 'Engineered for discreet transit and responsible child-resistant security. Constructed with an 8-layer thermal activated-carbon lining that traps volatile organic odors, weatherproof 900D ballistic exterior, and programmable 3-digit combination lock.',
+    short_description: 'Weatherproof carbon-lined travel bag with integrated combination lock.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-07',
+    specifications: {
+      'Dimensions': '24cm x 16cm x 11cm',
+      'Odor Barrier': 'Dual-layer high-density activated carbon felt matrix',
+      'Shell': 'Waterproof 900D Ballistic Poly with PU reverse zippers',
+      'Security': 'Integrated 3-Dial Resettable Combination Lock (Child-Safe)',
+      'Interior': 'Customizable padded Velcro partition compartments',
+    },
+    faq: [
+      {
+        question: 'How long does the activated carbon lining stay effective?',
+        answer: 'The carbon matrix retains full odor-adsorption performance for 12 to 18 months. Placing the empty bag in a warm dryer on gentle heat for 10 minutes reactivates the carbon pores.'
+      }
+    ]
+  },
+  {
+    id: 'acc-8',
+    sku: 'ACC-PAPERS-HEMP-SLIM',
+    name: 'European Organic Unbleached Hemp Rolling Papers (Slim 50-Pack)',
+    brand: 'Bavaria Botanics',
+    brandSlug: 'bavaria-botanics',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 12.50,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    ],
+    description: 'Ultra-thin, slow-burning rolling papers produced in France and Germany from certified organic industrial hemp fiber. Features natural acacia tree gum and watermark crisscross patterns for an even, run-free burn.',
+    short_description: 'Box of 5 booklets (50 leaves + 50 perforated tips per booklet).',
+    origin: 'Munich, Germany',
+    labBatch: 'DE-ACC-2026-08',
+    specifications: {
+      'Paper Weight': '13.0 GSM Ultra-Thin Translucent',
+      'Sheet Size': 'King Size Slim (108mm x 44mm)',
+      'Gumline': '100% Natural Organic Acacia Senegal Tree Gum',
+      'Bleach / Chlorine': '0% (Unbleached Natural Tan Fiber)',
+      'Quantity': '5 Booklets x 50 Leaves (250 Leaves Total) with Filter Tips',
+    }
+  },
+  {
+    id: 'acc-9',
+    sku: 'ACC-CLEAN-KIT-PRO',
+    name: 'Botanical Vaporizer & Glassware Maintenance Kit',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 29.50,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_clean_kit_1793782423048.jpg',
+    gallery: [
+      '/src/assets/images/acc_clean_kit_1793782423048.jpg',
+    ],
+    description: 'Comprehensive cleaning kit designed specifically for ceramic dry herb heating chambers, quartz bangers, and glass apothecary accessories. Includes organic bamboo cotton swabs, stainless steel dental scrapers, horsehair brushes, and 30x USP isopropyl alcohol pads in a wax-canvas roll.',
+    short_description: 'Waxed canvas roll with precision picks, swabs, and cleaning pads.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-09',
+    specifications: {
+      'Kit Contents': '50x Bamboo Swabs, 3x SUS304 Scrapers, 2x Brushes, 30x Wipes',
+      'Roll Material': '12oz Water-Resistant Waxed Duck Canvas',
+      'Wipe Alcohol': '70% USP Medical Isopropyl Alcohol (Residue-Free)',
+      'Safety': 'Safe on Borosilicate, Titanium, Ceramic, and Stainless Steel',
+    }
+  },
+  {
+    id: 'acc-10',
+    sku: 'ACC-JAR-CERAMIC-DK',
+    name: 'Apothecary Matte Ceramic Botanical Stash Jar (Bamboo Lid)',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 38.00,
+    inStock: true,
+    badge: 'Featured',
+    isFeatured: true,
+    image: '/src/assets/images/acc_ceramic_stash_1793782438469.jpg',
+    gallery: [
+      '/src/assets/images/acc_ceramic_stash_1793782438469.jpg',
+    ],
+    description: 'Kiln-fired dense ceramic stoneware finished with a matte moss-green glaze. The natural bamboo lid is equipped with a food-grade dual silicone flange that creates a complete suction seal against airborne contaminants.',
+    short_description: '350ml opaque ceramic jar with airtight natural bamboo lid.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-10',
+    specifications: {
+      'Capacity': '350ml (holds approx. 20-25g of botanical flower)',
+      'Vessel Material': 'Lead-Free High-Fire Stoneware Ceramic',
+      'Lid': 'Sustainable Moso Bamboo with Dual-Ridge Silicone Gasket',
+      'Dimensions': 'Height: 11cm / Diameter: 8.5cm',
+      'Thermal Inertia': 'Shields contents from ambient temperature fluctuations',
+    }
+  },
+  {
+    id: 'acc-11',
+    sku: 'ACC-BOVEDA-58-12',
+    name: 'Terpene Shield 58% RH Moisture Regulators (12-Pack)',
+    brand: 'Boveda Scientific',
+    brandSlug: 'boveda-scientific',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 19.50,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_terpene_shield_1793782438993.jpg',
+    gallery: [
+      '/src/assets/images/acc_terpene_shield_1793782438993.jpg',
+    ],
+    description: 'Precision 58% relative humidity regulator packs. Specifically preferred by connoisseurs who favor a slightly crisp snap for vaporization while keeping trichomes intact and sticky.',
+    short_description: '12-pack 8g moisture regulators calibrated to 58% RH.',
+    origin: 'Hamburg, Germany',
+    labBatch: 'DE-ACC-2026-11',
+    specifications: {
+      'Target Humidity': '58% Relative Humidity',
+      'Format': 'Size 8g individual retail pouches',
+      'Membrane': 'Patented reverse-osmosis vapor permeable paper',
+      'Quantity': '12 packs in resealable master bag',
+    }
+  },
+  {
+    id: 'acc-12',
+    sku: 'ACC-SCALE-LAB-PRO',
+    name: 'Laboratory Analytical Pocket Micro-Scale 0.001g High Precision',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 59.00,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_digital_scale_1793782422379.jpg',
+    gallery: [
+      '/src/assets/images/acc_digital_scale_1793782422379.jpg',
+    ],
+    description: 'Designed for analytical dosing of micro-botanicals and terpenes. Features a 50g maximum capacity with 0.001g (1mg) increments, integrated acrylic draft shield to prevent ambient air movement errors, and stainless steel weighing pan.',
+    short_description: '50g x 0.001g laboratory-grade milligram scale with draft shield.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-12',
+    specifications: {
+      'Capacity & Resolution': '50.000g x 0.001g (1 milligram sensitivity)',
+      'Draft Protection': 'Hinged transparent acrylic wind chamber',
+      'Calibration': 'Includes 20g Class F1 chrome test weight',
+      'Functions': 'Tare, Piece Counting (PCS), Zero Track',
+    }
+  },
+  {
+    id: 'acc-13',
+    sku: 'ACC-MIRON-500ML',
+    name: 'Miron Violet Glass 500ml Wide-Mouth Botanical Curing Vessel',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 26.00,
+    inStock: true,
+    badge: 'Featured',
+    image: '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+    gallery: [
+      '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+    ],
+    description: 'Large 500ml apothecary curing vessel fabricated from original European biophotonic violet glass. Wide mouth allows effortless hand access without crushing delicate whole-flower buds.',
+    short_description: '500ml biophotonic violet glass vessel for long-term curing.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-13',
+    specifications: {
+      'Volume': '500ml (stores 30-40g cured flower)',
+      'Neck Finish': '86mm Wide Mouth for easy filling',
+      'Glass Type': 'UV-filtering biophotonic soda-lime flint',
+      'Closure': 'Airtight phenolic lid with expanded polyethylene seal',
+    }
+  },
+  {
+    id: 'acc-14',
+    sku: 'ACC-TIPS-BORO-5PK',
+    name: 'Reusable Borosilicate Glass Mouthpieces & Filter Tips (5-Pack)',
+    brand: 'Berlin Craft Labs',
+    brandSlug: 'berlin-craft-labs',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 16.50,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    ],
+    description: 'Crafted from thermal-shock resistant Schott Duran borosilicate glass 3.3. Built with internal multi-pinch glass constrictions that cool vapor and block loose leaf matter. Cleanable and endlessly reusable.',
+    short_description: 'Set of 5 medical-grade 8mm borosilicate glass filter mouthpieces.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-14',
+    specifications: {
+      'Dimensions': '8mm Outer Diameter x 35mm Length',
+      'Glass Grade': 'Borosilicate 3.3 (Expansion 3.3 x 10^-6 K^-1)',
+      'Filter Geometry': 'Triple-indent cloverleaf constriction',
+      'Cleaning': 'Dishwasher and ultrasonic safe; soak in isopropyl alcohol',
+    }
+  },
+  {
+    id: 'acc-15',
+    sku: 'ACC-JOURNAL-BOTANICAL',
+    name: 'Canabis Hub Archival Botanical Monograph Field Journal',
+    brand: 'Canabis Hub Apparel',
+    brandSlug: 'canabis-hub-apparel',
+    category: 'Apparel & Lifestyle',
+    categorySlug: 'apparel',
+    type: 'permitted_merchandise',
+    price: 22.00,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    ],
+    description: 'Designed for passionate cultivar enthusiasts and botanical evaluators. Bound in debossed forest green bookcloth, featuring 160 pages of recycled stone paper with structured tasting templates, terpene aroma wheels, and lab report note slots.',
+    short_description: '160-page archival tasting journal with debossed linen hardcover.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-15',
+    specifications: {
+      'Binding': 'Smyth-Sewn Layflat Hardcover in Forest Green Linen',
+      'Paper': '120 GSM Waterproof Recycled Mineral Stone Paper',
+      'Page Count': '160 Numbered Pages (Log up to 75 Cultivars)',
+      'Features': 'Includes German-English terpene reference wheel',
+    }
+  },
+  {
+    id: 'acc-16',
+    sku: 'ACC-SIFT-SS-SCREEN',
+    name: 'Ultra-Fine Stainless Steel Sifting Screen & Pollen Scraper',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 17.50,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_aerospace_grinder_1793782406067.jpg',
+    gallery: [
+      '/src/assets/images/acc_aerospace_grinder_1793782406067.jpg',
+    ],
+    description: 'Precision replacement sifting screen woven with food-grade SUS304 stainless steel wire at 60 mesh (250-micron rating). Rigid tensioned aluminum frame slips directly into compatible multi-piece grinders.',
+    short_description: '60-mesh stainless steel sifting replacement sieve with scraper.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-16',
+    specifications: {
+      'Mesh Aperture': '250 Micron (60 Mesh US Standard)',
+      'Wire Diameter': '0.14mm Stainless Steel 304',
+      'Compatibility': 'Fits standard 62-65mm 4-piece botanical grinders',
+      'Included Scraper': 'Anti-static curved polymer triangular shovel',
+    }
+  },
+  {
+    id: 'acc-17',
+    sku: 'ACC-TOOL-TITANIUM-DE',
+    name: 'Medical Grade Titanium Terpene Dab Tool (Double-Ended)',
+    brand: 'Stuttgart Precision',
+    brandSlug: 'stuttgart-precision',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 21.00,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_clean_kit_1793782423048.jpg',
+    gallery: [
+      '/src/assets/images/acc_clean_kit_1793782423048.jpg',
+    ],
+    description: 'Precision instrument machined from certified Grade 2 biocompatible pure titanium. Features a non-slip diamond knurled center grip, flat scoop on one side for crumbles/rosin, and sharp curved dental probe for delicate handling.',
+    short_description: 'Grade 2 pure titanium double-ended lab tool with knurled grip.',
+    origin: 'Stuttgart, Germany',
+    labBatch: 'DE-ACC-2026-17',
+    specifications: {
+      'Material': 'ASTM B348 Grade 2 CP Titanium (99.2% Pure Ti)',
+      'Overall Length': '145mm / Weight: 14.2g',
+      'Melting Point': '1,668°C (Zero thermal oxidation or off-gassing)',
+      'Tips': 'Spoon-spade tip (4mm) + Micro-carver curved needle tip',
+    }
+  },
+  {
+    id: 'acc-18',
+    sku: 'ACC-MAT-SILICONE-L',
+    name: 'Non-Stick Platinum Cured Silicone Botanical Work Mat (30x20cm)',
+    brand: 'Berlin Craft Labs',
+    brandSlug: 'berlin-craft-labs',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 15.00,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_walnut_rolling_tray_1793782406133.jpg',
+    gallery: [
+      '/src/assets/images/acc_walnut_rolling_tray_1793782406133.jpg',
+    ],
+    description: 'Heavyweight platinum-cured laboratory silicone mat. Absolutely non-stick for resins, rosin, and plant oils. Withstands temperatures from -40°C to +260°C. Printed with metric measurement grids and terpene boiling point charts.',
+    short_description: '30x20cm platinum-cured non-stick silicone handling surface.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-18',
+    specifications: {
+      'Dimensions': '30cm x 20cm x 1.5mm',
+      'Material': '100% Platinum-Cured Food-Contact Silicone (LFGB & FDA certified)',
+      'Heat Resistance': '-40°C to +260°C continuous exposure',
+      'Cleaning': 'Wash with warm soapy water or 70% isopropyl wipe',
+    }
+  },
+  {
+    id: 'acc-19',
+    sku: 'ACC-CONES-HEMP-32PK',
+    name: 'Pre-Rolled Organic Unbleached Hemp Cones (32-Pack Dispenser)',
+    brand: 'Bavaria Botanics',
+    brandSlug: 'bavaria-botanics',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 18.00,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    ],
+    description: 'Pre-rolled king-size cones made from pure unbleached organic hemp paper. Each cone is fitted with a built-in accordion cardboard tip, ready to fill with the included bamboo packing sticks.',
+    short_description: '32 King-Size 109mm pre-rolled organic cones with packing sticks.',
+    origin: 'Munich, Germany',
+    labBatch: 'DE-ACC-2026-19',
+    specifications: {
+      'Size': 'King Size 109mm with 26mm built-in filter tip',
+      'Paper': 'Unbleached Organic European Industrial Hemp',
+      'Packing Tools': '4x Natural polished bamboo packing pokers',
+      'Box': 'Plastic-free recyclable kraft slide dispenser',
+    }
+  },
+  {
+    id: 'acc-20',
+    sku: 'ACC-POUCH-ODOR-CLUTCH',
+    name: 'Lockable Odor-Proof Padded Botanical Clutch Pouch',
+    brand: 'Berlin Craft Labs',
+    brandSlug: 'berlin-craft-labs',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 36.00,
+    inStock: true,
+    badge: 'Featured',
+    image: '/src/assets/images/acc_smellproof_case_1793782406807.jpg',
+    gallery: [
+      '/src/assets/images/acc_smellproof_case_1793782406807.jpg',
+    ],
+    description: 'Compact daily carry clutch lined with high-adsorption activated carbon fiber fabric. Features a lockable dual-zipper closure that accepts standard luggage or wire locks, internal elastic organizers, and weather-resistant nylon shell.',
+    short_description: 'Slimline carbon-lined smell-proof pouch with lockable zippers.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-20',
+    specifications: {
+      'Dimensions': '21cm x 13cm x 4cm (Slim pocketable profile)',
+      'Odor Layer': '100% Activated Carbon woven textile mesh',
+      'Water Resistance': 'DWR water-repellent nylon surface finish',
+      'Zippers': 'Dual interlocking reverse-coil slider zips',
+    }
+  },
+  {
+    id: 'acc-21',
+    sku: 'ACC-BOTTLE-AMBER-4PK',
+    name: 'Apothecary Amber Glass Dropper Bottles with Pipette (4x 30ml)',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 14.50,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+    gallery: [
+      '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
+    ],
+    description: 'Four pharmaceutical-grade 30ml amber glass bottles fitted with child-resistant tamper-evident bulb pipettes. Pipettes are graduated at 0.25ml, 0.5ml, 0.75ml, and 1.0ml for precise herbal tincture dispensing.',
+    short_description: '4x 30ml amber glass bottles with graduated child-resistant pipettes.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-21',
+    specifications: {
+      'Volume': '4x 30ml (1.0 fl oz)',
+      'Glass Rating': 'Type III Amber Glass with UV-B / UV-A filtering',
+      'Pipette': 'Calibrated borosilicate glass with 1.0ml metered markings',
+      'Safety Closure': 'Push-and-turn Child-Resistant Cap (DIN EN ISO 8317)',
+    }
+  },
+  {
+    id: 'acc-22',
+    sku: 'ACC-TIPS-KRAFT-5PK',
+    name: 'Organic Unbleached Perforated Filter Tips Booklet (5-Pack / 250 Tips)',
+    brand: 'Bavaria Botanics',
+    brandSlug: 'bavaria-botanics',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 8.50,
+    inStock: true,
+    badge: 'Popular',
+    image: '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_papers_1793782422934.jpg',
+    ],
+    description: 'Pack of 5 tip booklets containing 50 unbleached, chlorine-free perforated tips each (250 tips total). Precision laser micro-perforations allow clean accordion folding for superior airflow and zero particulate passage.',
+    short_description: '5 booklets x 50 perforated organic tips (250 tips total).',
+    origin: 'Munich, Germany',
+    labBatch: 'DE-ACC-2026-22',
+    specifications: {
+      'Paper': 'Certified FSC Unbleached Virgin Kraft Fibers',
+      'Tip Size': '60mm x 18mm with 5 pre-scored accordion perforation lines',
+      'Chemicals': '100% Chlorine-free, non-GMO, vegan',
+    }
+  },
+  {
+    id: 'acc-23',
+    sku: 'ACC-BOX-OAK-POCKET',
+    name: 'Bavarian Oak Pocket Herb Stash Box with Magnetic Lid',
+    brand: 'Canabis Hub Hardware',
+    brandSlug: 'canabis-hub-hardware',
+    category: 'Accessories & Storage',
+    categorySlug: 'accessories',
+    type: 'permitted_merchandise',
+    price: 32.00,
+    inStock: true,
+    badge: 'New',
+    image: '/src/assets/images/acc_ceramic_stash_1793782438469.jpg',
+    gallery: [
+      '/src/assets/images/acc_ceramic_stash_1793782438469.jpg',
+    ],
+    description: 'Pocket-sized botanical travel box precision CNC-milled from a single block of German sessile oak. Dual concealed neodymium magnets keep the sliding lid securely closed during transit. Includes a carved miniature wooden scoop.',
+    short_description: 'Solid German oak pocket stash box with dual magnetic lid.',
+    origin: 'Bavaria, Germany',
+    labBatch: 'DE-ACC-2026-23',
+    specifications: {
+      'Dimensions': '10cm x 6cm x 2.8cm',
+      'Wood Species': 'Quercus petraea (Bavarian Sessile Oak)',
+      'Closure': 'Dual N52 Rare-Earth Neodymium Magnets',
+      'Finish': 'Natural organic tung oil and food-grade beeswax polish',
+    }
+  },
+  {
+    id: 'acc-24',
+    sku: 'ACC-APRON-HEMP-RAW',
+    name: 'Heavyweight Organic Hemp Canvas Botanical Barista Apron',
+    brand: 'Canabis Hub Apparel',
+    brandSlug: 'canabis-hub-apparel',
+    category: 'Apparel & Lifestyle',
+    categorySlug: 'apparel',
+    type: 'permitted_merchandise',
+    price: 48.00,
+    inStock: true,
+    badge: 'Featured',
+    image: '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    gallery: [
+      '/src/assets/images/acc_hemp_tote_1793782423453.jpg',
+    ],
+    description: 'Crafted for dispensary concierges, extraction technicians, and home botanists. Fabricated from 14oz raw European industrial hemp canvas with reinforced antique brass rivets, cross-back adjustable straps that relieve neck strain, and towel loops.',
+    short_description: '14oz organic European hemp canvas apron with cross-back straps.',
+    origin: 'Berlin, Germany',
+    labBatch: 'DE-ACC-2026-24',
+    specifications: {
+      'Fabric': '14oz (460 GSM) 100% Organic European Industrial Hemp',
+      'Hardware': 'Antique Solid Brass Grommets & Bar-Tack Rivets',
+      'Strap System': 'Cross-Back Cotton Webbing (relieves neck pressure)',
+      'Storage': 'Double deep chest pocket + two waist tool utility pockets',
+    }
   },
 ];
 

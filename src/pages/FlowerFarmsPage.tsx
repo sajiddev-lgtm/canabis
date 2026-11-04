@@ -183,7 +183,9 @@ export const FlowerFarmsPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#68756F] dark:text-gray-400">Terpenes:</span>
-                      <span className="font-medium truncate max-w-[150px] dark:text-gray-200">{prod.terpenes.join(', ')}</span>
+                      <span className="font-medium truncate max-w-[150px] dark:text-gray-200">
+                        {prod.terpenes ? prod.terpenes.join(', ') : 'Botanical Profile'}
+                      </span>
                     </div>
                   </div>
                 </div>

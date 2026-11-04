@@ -5,131 +5,109 @@
 
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { BRANDS_DIRECTORY, PRODUCTS_DATA } from '../data/cannabisData';
-import { Sparkles, ArrowRight, ShieldCheck, Clock, Heart, Apple } from 'lucide-react';
+import { Droplets, ShieldCheck, Clock, Bookmark, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const EdiblesPage: React.FC = () => {
-  const { navigateTo } = useApp();
+  const { products, openProductModal, savedProductIds, toggleSaveProduct } = useApp();
 
-  const edibleBrands = BRANDS_DIRECTORY.filter((b) => b.category === 'edibles_more');
-  const edibleProducts = PRODUCTS_DATA.filter((p) => p.categorySlug === 'edibles');
+  const edibleProducts = products.filter(
+    (p) => p.category_slug === 'edibles' || p.category === 'Artisanal Edibles'
+  );
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] dark:bg-[#041F18] py-12 text-[#263A36] dark:text-[#E2E8F0] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb & Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 text-xs text-[#68756F] dark:text-gray-400 mb-3">
-            <button onClick={() => navigateTo('home')} className="hover:text-[#07543F] dark:hover:text-emerald-400">
-              Home
-            </button>
-            <span>/</span>
-            <span className="text-[#07543F] dark:text-emerald-400 font-semibold">Edibles & More</span>
-          </div>
-
-          <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] block mb-2">
-            CONFECTIONERY & BIOAVAILABILITY
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+      {/* Header Banner */}
+      <div className="rounded-3xl bg-gradient-to-br from-amber-950 via-[#063E30] to-[#07543F] text-white p-8 sm:p-12 relative overflow-hidden">
+        <div className="max-w-2xl space-y-4 relative z-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] px-3 py-1 rounded-full bg-amber-900/60 inline-block">
+            Precision Dosing & Gastro-Botanical Formulations
           </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#063E30] dark:text-white tracking-tight mb-4">
-            Artisanal Edibles & Infusions
+          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit']">
+            Artisanal Edibles & Sublingual Drops
           </h1>
-          <p className="text-sm sm:text-base text-[#68756F] dark:text-gray-300 max-w-3xl leading-relaxed">
-            From precision vegan pectin lozenges and Belgian dark chocolates to whole-plant RSO elixirs. Discover how metered oral dosing and nano-emulsion technology provide predictable, sustained wellness.
+          <p className="text-xs sm:text-sm text-emerald-100/80 leading-relaxed">
+            Formulated with organic fruit pectin, cold-pressed botanical carrier oils, and metered cannabinoid concentrations. Designed for predictable onset and consistent harm reduction.
           </p>
         </div>
+      </div>
 
-        {/* Science & Dosing Guidelines Banner */}
-        <div className="bg-[#073B2E] dark:bg-[#073B2E]/90 text-white rounded-3xl p-8 sm:p-10 mb-16 border border-white/10 shadow-xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-white/10 text-[#F28A19] flex items-center justify-center mb-3">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-lg text-white">Pharmacokinetics</h3>
-              <p className="text-xs text-[#FFFDF8]/80 leading-relaxed">
-                Ingested cannabinoids are converted by the liver into 11-hydroxy-THC, yielding a more profound, prolonged duration of action (4 to 8 hours).
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-white/10 text-[#F28A19] flex items-center justify-center mb-3">
-                <Apple className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-lg text-white">Clean Pectin Bases</h3>
-              <p className="text-xs text-[#FFFDF8]/80 leading-relaxed">
-                Our partnered confectioners avoid animal gelatins, corn syrups, and synthetic dyes, choosing fruit pectin and organic tapioca syrups.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-white/10 text-[#F28A19] flex items-center justify-center mb-3">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-lg text-white">Start Low, Go Slow</h3>
-              <p className="text-xs text-[#FFFDF8]/80 leading-relaxed">
-                Medical guidelines recommend initiating edible exploration with 2.5mg to 5mg of THC, waiting 90 minutes before evaluating onset.
-              </p>
-            </div>
-          </div>
+      {/* Dosing & Safety Notice */}
+      <div className="p-5 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 text-xs text-[#263A36] dark:text-orange-200 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-[#F28A19] shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="font-bold text-[#F28A19] text-sm">Harm Reduction Rule: "Start Low, Go Slow"</h4>
+          <p className="leading-relaxed">
+            Ingested cannabinoids metabolize through hepatic 11-hydroxy-THC conversion. Onset typically spans 45–90 minutes. Always begin with a micro-dose (e.g. 2.5mg – 5mg THC) and wait a minimum of 2 hours before redosing.
+          </p>
         </div>
+      </div>
 
-        {/* 13 Indexed Edible Brands */}
-        <div className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] block mb-1">
-                MEGA MENU COLUMN 4
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#063E30] dark:text-white">
-                All 13 Indexed Edible & Wellness Brands
-              </h2>
-            </div>
-            <span className="text-xs text-[#68756F] dark:text-gray-400">13 Artisanal Labs</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {edibleBrands.map((brand) => (
-              <div
-                key={brand.id}
-                className="bg-white dark:bg-[#073B2E]/50 rounded-2xl p-6 border border-[#E9EDE7] dark:border-white/10 hover:border-[#07543F]/40 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-[#68756F] dark:text-gray-400">{brand.location}</span>
-                    <span className="text-[#F28A19] font-bold text-[10px] uppercase">
-                      {brand.founded}
-                    </span>
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {edibleProducts.map((p) => {
+          const isSaved = savedProductIds.includes(p.id);
+          return (
+            <div
+              key={p.id}
+              className="group p-5 rounded-3xl bg-white dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-emerald-800 shadow-xs hover:shadow-xl hover:border-[#07543F] transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="relative aspect-4/3 rounded-2xl overflow-hidden mb-4 bg-emerald-950">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#07543F] text-emerald-100 text-[10px] font-bold">
+                    {p.short_description}
                   </div>
-
-                  <h3
-                    onClick={() => navigateTo('brand-detail', brand.id)}
-                    className="font-extrabold text-xl text-[#063E30] dark:text-white group-hover:text-[#07543F] dark:group-hover:text-emerald-300 cursor-pointer mb-1.5 transition-colors"
-                  >
-                    {brand.name}
-                  </h3>
-
-                  <p className="text-xs font-medium text-[#F28A19] mb-3">
-                    {brand.tagline}
-                  </p>
-
-                  <p className="text-xs text-[#68756F] dark:text-gray-300 leading-relaxed mb-4">
-                    {brand.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-[#E9EDE7] dark:border-white/10">
                   <button
-                    onClick={() => navigateTo('brand-detail', brand.id)}
-                    className="w-full py-2.5 rounded-xl bg-[#FFFDF8] dark:bg-[#041F18]/80 hover:bg-[#07543F] dark:hover:bg-emerald-600 hover:text-white border border-[#E9EDE7] dark:border-white/10 text-xs font-bold text-[#063E30] dark:text-white transition-colors flex items-center justify-center gap-1.5"
+                    onClick={() => toggleSaveProduct(p.id)}
+                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-colors ${
+                      isSaved ? 'bg-[#07543F] text-white' : 'bg-white/80 dark:bg-emerald-950/80 text-slate-700 dark:text-white'
+                    }`}
                   >
-                    <span>View Confectionery Profile</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
                   </button>
                 </div>
+
+                <span className="text-xs font-bold text-[#F28A19] block uppercase tracking-wider">
+                  {p.brand}
+                </span>
+
+                <h3 className="text-lg font-bold text-[#063E30] dark:text-white mt-1 group-hover:text-[#07543F] transition-colors">
+                  {p.name}
+                </h3>
+
+                <p className="text-xs text-[#68756F] dark:text-emerald-200/70 mt-2 line-clamp-2">
+                  {p.description}
+                </p>
+
+                <div className="mt-4 pt-3 border-t border-[#E9EDE7] dark:border-emerald-800 grid grid-cols-2 gap-2 text-center text-xs">
+                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800">
+                    <span className="text-[10px] text-slate-500 block">THC</span>
+                    <span className="font-extrabold text-[#07543F] dark:text-emerald-300">{p.thc}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-800">
+                    <span className="text-[10px] text-slate-500 block">CBD</span>
+                    <span className="font-extrabold text-[#F28A19]">{p.cbd}</span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+
+              <div className="mt-5 pt-3 border-t border-[#E9EDE7] dark:border-emerald-800 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-slate-500">{p.lab_batch}</span>
+                <button
+                  onClick={() => openProductModal(p)}
+                  className="px-3 py-1.5 rounded-xl bg-[#07543F] text-white text-xs font-bold hover:bg-[#063E30] flex items-center gap-1.5"
+                >
+                  <span>Monograph Details</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

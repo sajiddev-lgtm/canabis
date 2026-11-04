@@ -324,6 +324,10 @@ app.get('/api/products', (req: Request, res: Response) => {
       ...r,
       terpenes: JSON.parse(r.terpenes_json || '[]'),
       effects: JSON.parse(r.effects_json || '[]'),
+      specifications: JSON.parse(r.specifications_json || '{}'),
+      gallery: JSON.parse(r.gallery_json || '[]'),
+      isFeatured: Boolean(r.is_featured),
+      badge: r.badge || '',
       inStock: Boolean(r.in_stock),
     }));
 
@@ -345,31 +349,36 @@ app.post('/api/products', adminMiddleware, (req: AuthRequest, res: Response) => 
       INSERT INTO products (
         id, sku, name, brand, brand_slug, category, category_slug, type, price, in_stock,
         description, short_description, image, thc, cbd, terpenes_json, effects_json,
-        aroma, lab_batch, origin, status, seo_title, seo_description, created_at
+        aroma, lab_batch, origin, status, is_featured, badge, specifications_json, gallery_json,
+        seo_title, seo_description, created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       sku,
       p.name || 'Untitled Product',
       p.brand || 'Canabis Hub Brand',
       p.brand_slug || 'brand',
-      p.category || 'Premium Flower',
-      p.category_slug || 'flower',
-      p.type || 'informational',
+      p.category || 'Accessories & Storage',
+      p.category_slug || 'accessories',
+      p.type || 'permitted_merchandise',
       p.price || 0.0,
       p.in_stock ? 1 : 0,
       p.description || '',
       p.short_description || '',
-      p.image || '/src/assets/images/product_premium_flower_1793700802879.jpg',
+      p.image || '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
       p.thc || '',
       p.cbd || '',
       JSON.stringify(p.terpenes || []),
       JSON.stringify(p.effects || []),
       p.aroma || '',
-      p.lab_batch || 'DE-LAB-2026-NEW',
+      p.lab_batch || 'DE-ACC-2026-NEW',
       p.origin || 'Germany',
       p.status || 'published',
+      p.is_featured ? 1 : 0,
+      p.badge || '',
+      JSON.stringify(p.specifications || {}),
+      JSON.stringify(p.gallery || [p.image || '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg']),
       p.seo_title || p.name,
       p.seo_description || p.short_description,
       now
@@ -402,6 +411,9 @@ app.put('/api/products/:id', adminMiddleware, (req: AuthRequest, res: Response) 
         thc = COALESCE(?, thc),
         cbd = COALESCE(?, cbd),
         status = COALESCE(?, status),
+        is_featured = COALESCE(?, is_featured),
+        badge = COALESCE(?, badge),
+        specifications_json = COALESCE(?, specifications_json),
         seo_title = COALESCE(?, seo_title),
         seo_description = COALESCE(?, seo_description)
       WHERE id = ?
@@ -411,13 +423,16 @@ app.put('/api/products/:id', adminMiddleware, (req: AuthRequest, res: Response) 
       p.brand,
       p.category,
       p.price,
-      p.in_stock !== undefined ? (p.in_stock ? 1 : 0) : null,
+      p.in_stock !== undefined ? (p.in_stock ? 1 : 0) : (p.inStock !== undefined ? (p.inStock ? 1 : 0) : null),
       p.description,
       p.short_description,
       p.image,
       p.thc,
       p.cbd,
       p.status,
+      p.is_featured !== undefined ? (p.is_featured ? 1 : 0) : (p.isFeatured !== undefined ? (p.isFeatured ? 1 : 0) : null),
+      p.badge !== undefined ? p.badge : null,
+      p.specifications ? JSON.stringify(p.specifications) : null,
       p.seo_title,
       p.seo_description,
       id

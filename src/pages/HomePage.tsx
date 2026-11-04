@@ -488,7 +488,7 @@ export const HomePage: React.FC = () => {
 
                       {/* Title */}
                       <h3
-                        onClick={() => navigateTo('brand-detail', product.brandSlug)}
+                        onClick={() => navigateTo('product-detail', product.id)}
                         className="font-bold text-base text-[#063E30] dark:text-white hover:text-[#07543F] dark:hover:text-[#F28A19] cursor-pointer mb-2 line-clamp-1"
                       >
                         {product.name}
@@ -502,15 +502,15 @@ export const HomePage: React.FC = () => {
                       {/* Informational Product Attributes */}
                       <div className="pt-3 border-t border-[#E9EDE7] dark:border-white/10 space-y-1.5 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="text-[#68756F] dark:text-white/60">Potency Ratio:</span>
+                          <span className="text-[#68756F] dark:text-white/60">Potency / Price:</span>
                           <span className="font-semibold text-[#07543F] dark:text-emerald-400">
-                            THC {product.thc} · CBD {product.cbd}
+                            {product.type === 'informational' ? `THC ${product.thc}` : `€${product.price?.toFixed(2)}`}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[#68756F] dark:text-white/60">Key Terpenes:</span>
+                          <span className="text-[#68756F] dark:text-white/60">Profile:</span>
                           <span className="font-medium text-[#263A36] dark:text-white/80 truncate max-w-[140px]">
-                            {product.terpenes.join(', ')}
+                            {product.terpenes ? product.terpenes.join(', ') : 'Botanical Standard'}
                           </span>
                         </div>
                       </div>
@@ -520,10 +520,10 @@ export const HomePage: React.FC = () => {
                   {/* Card Bottom Link */}
                   <div className="px-5 pb-5 pt-0">
                     <button
-                      onClick={() => navigateTo('brand-detail', product.brandSlug)}
+                      onClick={() => navigateTo('product-detail', product.id)}
                       className="w-full py-2.5 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] hover:bg-[#07543F] dark:hover:bg-[#07543F] hover:text-white border border-[#E9EDE7] dark:border-white/10 text-xs font-bold text-[#063E30] dark:text-white transition-colors flex items-center justify-center gap-1.5"
                     >
-                      <span>Brand Profile: {product.brand}</span>
+                      <span>View Specifications</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

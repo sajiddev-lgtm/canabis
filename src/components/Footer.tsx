@@ -278,27 +278,6 @@ export const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Floating WhatsApp Contact Button */}
-      <div className="fixed bottom-6 right-6 z-50 flex items-center">
-        {showWhatsAppTooltip && (
-          <div className="mr-3 bg-white text-[#263A36] px-3.5 py-2 rounded-xl shadow-xl text-xs font-semibold border border-[#E9EDE7] whitespace-nowrap animate-fadeIn">
-            Questions? Chat with our Berlin Advisory Team
-            <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 border-solid border-l-white border-l-8 border-y-transparent border-y-6 border-r-0" />
-          </div>
-        )}
-        <a
-          href="https://wa.me/493089204401?text=Hello%20Canabis%20Hub,%20I%20have%20an%20inquiry%20regarding%20German%20cannabis%20standards."
-          target="_blank"
-          rel="noopener noreferrer"
-          onMouseEnter={() => setShowWhatsAppTooltip(true)}
-          onMouseLeave={() => setShowWhatsAppTooltip(false)}
-          className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform duration-200 focus:outline-none focus:ring-4 focus:ring-[#25D366]/30"
-          aria-label="Direct WhatsApp Advisory Chat"
-        >
-          <MessageCircle className="w-7 h-7 fill-white" />
-        </a>
-      </div>
     </footer>
   );
 };

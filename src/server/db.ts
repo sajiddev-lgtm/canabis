@@ -75,6 +75,7 @@ export function initDatabase() {
       brand TEXT NOT NULL,
       brand_slug TEXT NOT NULL,
       category TEXT NOT NULL,
+      categorySlug TEXT NOT NULL DEFAULT '',
       category_slug TEXT NOT NULL,
       type TEXT NOT NULL DEFAULT 'informational',
       price REAL DEFAULT 0.0,
@@ -90,6 +91,10 @@ export function initDatabase() {
       lab_batch TEXT DEFAULT '',
       origin TEXT DEFAULT '',
       status TEXT NOT NULL DEFAULT 'published',
+      is_featured INTEGER DEFAULT 0,
+      badge TEXT DEFAULT '',
+      specifications_json TEXT DEFAULT '{}',
+      gallery_json TEXT DEFAULT '[]',
       seo_title TEXT DEFAULT '',
       seo_description TEXT DEFAULT '',
       created_at TEXT NOT NULL
@@ -317,150 +322,73 @@ export function initDatabase() {
     }
   }
 
+  // Safe migrations for newly added columns
+  try { db.exec('ALTER TABLE products ADD COLUMN is_featured INTEGER DEFAULT 0'); } catch {}
+  try { db.exec("ALTER TABLE products ADD COLUMN badge TEXT DEFAULT ''"); } catch {}
+  try { db.exec("ALTER TABLE products ADD COLUMN specifications_json TEXT DEFAULT '{}'"); } catch {}
+  try { db.exec("ALTER TABLE products ADD COLUMN gallery_json TEXT DEFAULT '[]'"); } catch {}
+
   // Seed Products (Informational Cannabis Monographs + Permitted Non-Cannabis Merchandise)
-  const prodCount = db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number };
-  if (prodCount.count === 0) {
-    const insertProd = db.prepare(`
-      INSERT INTO products (
-        id, sku, name, brand, brand_slug, category, category_slug, type, price, in_stock,
-        description, short_description, image, thc, cbd, terpenes_json, effects_json,
-        aroma, lab_batch, origin, status, seo_title, seo_description, created_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+  const upsertProd = db.prepare(`
+    INSERT INTO products (
+      id, sku, name, brand, brand_slug, category, category_slug, type, price, in_stock,
+      description, short_description, image, thc, cbd, terpenes_json, effects_json,
+      aroma, lab_batch, origin, status, is_featured, badge, specifications_json, gallery_json,
+      seo_title, seo_description, created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      sku=excluded.sku,
+      name=excluded.name,
+      brand=excluded.brand,
+      brand_slug=excluded.brand_slug,
+      category=excluded.category,
+      category_slug=excluded.category_slug,
+      type=excluded.type,
+      price=excluded.price,
+      in_stock=excluded.in_stock,
+      description=excluded.description,
+      short_description=excluded.short_description,
+      image=excluded.image,
+      is_featured=excluded.is_featured,
+      badge=excluded.badge,
+      specifications_json=excluded.specifications_json,
+      gallery_json=excluded.gallery_json
+  `);
 
-    const now = new Date().toISOString();
-
-    // 1. Seed Informational Cannabis Products
-    for (const p of PRODUCTS_DATA) {
-      insertProd.run(
-        p.id,
-        `SKU-${p.id.toUpperCase()}`,
-        p.name,
-        p.brand,
-        p.brandSlug,
-        p.category,
-        p.categorySlug,
-        'informational',
-        0.0,
-        1,
-        p.description,
-        `${p.strainType} · THC ${p.thc}`,
-        p.image,
-        p.thc,
-        p.cbd,
-        JSON.stringify(p.terpenes),
-        JSON.stringify(p.effects),
-        p.aroma,
-        p.labBatch,
-        p.origin,
-        'published',
-        `${p.name} Monograph | Canabis Hub`,
-        `Complete lab certificate and terpene breakdown for ${p.name}.`,
-        now
-      );
-    }
-
-    // 2. Seed Lawful Non-Cannabis Merchandise & Botanical Accessories (Permitted for transaction)
-    const permittedItems = [
-      {
-        id: 'acc-1',
-        sku: 'ACC-GLASS-JAR-3PK',
-        name: 'German Botanical Violet Glass Curing Jars (3-Pack)',
-        brand: 'Canabis Hub Hardware',
-        brandSlug: 'canabis-hub-hardware',
-        category: 'Accessories & Storage',
-        categorySlug: 'accessories',
-        type: 'permitted_merchandise',
-        price: 34.50,
-        in_stock: 45,
-        description: 'Biophotonic Miron violet glass containers blocking the complete visible light spectrum while admitting beneficial UV-A and infrared frequencies for optimal terpene aging.',
-        short_description: '3x 250ml Miron violet glass curing jars with airtight seal.',
-        image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
-        labBatch: 'DE-ACC-2026-01',
-        origin: 'Bavaria, Germany',
-      },
-      {
-        id: 'acc-2',
-        sku: 'ACC-BOVEDA-62',
-        name: 'Terpene Shield Humidity Packs 62% RH (10-Pack)',
-        brand: 'Boveda Scientific',
-        brandSlug: 'boveda-scientific',
-        category: 'Accessories & Storage',
-        categorySlug: 'accessories',
-        type: 'permitted_merchandise',
-        price: 18.90,
-        in_stock: 120,
-        description: 'Patented 2-way humidity control technology creating a monolayer of purified water vapor over trichomes to prevent evaporation of volatile terpenes.',
-        short_description: 'Size 8g humidity regulators for curing containers.',
-        image: '/src/assets/images/product_extract_concentrate_1793700803077.jpg',
-        labBatch: 'DE-ACC-2026-02',
-        origin: 'Hamburg, Germany',
-      },
-      {
-        id: 'acc-3',
-        sku: 'ACC-SCALE-DIGITAL',
-        name: 'Precision Analytical Botanical Scale 0.01g',
-        brand: 'Stuttgart Precision',
-        brandSlug: 'stuttgart-precision',
-        category: 'Accessories & Storage',
-        categorySlug: 'accessories',
-        type: 'permitted_merchandise',
-        price: 49.00,
-        in_stock: 35,
-        description: 'High-precision strain gauge sensor with backlit LCD, stainless steel platform, tare function, and 100g calibration weight for accurate botanical compounding.',
-        short_description: '0.01g to 500g digital pocket laboratory scale.',
-        image: '/src/assets/images/hero_lab_testing_1793700802431.jpg',
-        labBatch: 'DE-ACC-2026-03',
-        origin: 'Stuttgart, Germany',
-      },
-      {
-        id: 'acc-4',
-        sku: 'ACC-TOTE-ORGANIC',
-        name: 'Canabis Hub Heavyweight Organic Hemp Tote',
-        brand: 'Canabis Hub Apparel',
-        brandSlug: 'canabis-hub-apparel',
-        category: 'Apparel & Lifestyle',
-        categorySlug: 'apparel',
-        type: 'permitted_merchandise',
-        price: 24.00,
-        in_stock: 80,
-        description: 'Crafted from 100% European unbleached organic hemp canvas with reinforced cross-stitching and screenprinted botanical typography.',
-        short_description: 'Heavyweight organic hemp canvas tote with internal zippered pocket.',
-        image: '/src/assets/images/delivery_fleet_retail_1793700802596.jpg',
-        labBatch: 'DE-ACC-2026-04',
-        origin: 'Berlin, Germany',
-      },
-    ];
-
-    for (const acc of permittedItems) {
-      insertProd.run(
-        acc.id,
-        acc.sku,
-        acc.name,
-        acc.brand,
-        acc.brandSlug,
-        acc.category,
-        acc.categorySlug,
-        acc.type,
-        acc.price,
-        acc.in_stock,
-        acc.description,
-        acc.short_description,
-        acc.image,
-        '0.0%',
-        '0.0%',
-        JSON.stringify([]),
-        JSON.stringify([]),
-        'Clean non-botanical accessory',
-        acc.labBatch,
-        acc.origin,
-        'published',
-        `${acc.name} | Canabis Hub Store`,
-        acc.short_description,
-        now
-      );
-    }
+  const now = new Date().toISOString();
+  for (const p of PRODUCTS_DATA) {
+    const isPermitted = p.type === 'permitted_merchandise';
+    upsertProd.run(
+      p.id,
+      p.sku || `SKU-${p.id.toUpperCase()}`,
+      p.name,
+      p.brand,
+      p.brandSlug || 'canabis-hub',
+      p.category,
+      p.categorySlug || 'accessories',
+      p.type || (isPermitted ? 'permitted_merchandise' : 'informational'),
+      p.price || 0.0,
+      p.inStock !== false ? 1 : 0,
+      p.description,
+      p.short_description || '',
+      p.image,
+      p.thc || '',
+      p.cbd || '',
+      JSON.stringify(p.terpenes || []),
+      JSON.stringify(p.effects || []),
+      p.aroma || '',
+      p.labBatch || '',
+      p.origin || 'Germany',
+      'published',
+      p.isFeatured ? 1 : 0,
+      p.badge || '',
+      JSON.stringify(p.specifications || {}),
+      JSON.stringify(p.gallery || [p.image]),
+      `${p.name} | Canabis Hub`,
+      p.short_description || p.description.slice(0, 150),
+      now
+    );
   }
 
   // Seed Blog Posts

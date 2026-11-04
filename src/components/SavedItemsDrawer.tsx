@@ -98,22 +98,36 @@ export const SavedItemsDrawer: React.FC = () => {
                     <h5
                       onClick={() => {
                         closeSavedDrawer();
-                        navigateTo('shop');
+                        navigateTo('product-detail', prod.id);
                       }}
-                      className="font-bold text-sm text-[#263A36] dark:text-white truncate hover:text-[#07543F] dark:hover:text-emerald-300 cursor-pointer"
+                      className="font-bold text-sm text-[#263A36] dark:text-white truncate hover:text-[#07543F] dark:hover:text-[#F28A19] cursor-pointer"
                     >
                       {prod.name}
                     </h5>
                     <div className="flex items-center gap-2 text-xs text-[#68756F] dark:text-gray-300 mt-1">
-                      <span>THC: {prod.thc}</span>
-                      <span>·</span>
-                      <span>{prod.strainType}</span>
+                      {prod.type === 'permitted_merchandise' ? (
+                        <span className="font-mono font-bold text-[#07543F] dark:text-emerald-400">
+                          €{prod.price?.toFixed(2)}
+                        </span>
+                      ) : (
+                        <>
+                          <span>THC: {prod.thc}</span>
+                          <span>·</span>
+                          <span>{prod.strainType || 'Cannabis'}</span>
+                        </>
+                      )}
                     </div>
 
                     <div className="mt-2 flex items-center justify-between text-xs pt-1 border-t border-[#E9EDE7]/60 dark:border-white/10">
-                      <span className="font-mono text-[10px] text-[#68756F] dark:text-gray-400">
-                        {prod.labBatch}
-                      </span>
+                      <button
+                        onClick={() => {
+                          closeSavedDrawer();
+                          navigateTo('product-detail', prod.id);
+                        }}
+                        className="text-[#07543F] dark:text-[#F28A19] font-bold text-xs hover:underline flex items-center gap-1"
+                      >
+                        View Product <ExternalLink className="w-3 h-3" />
+                      </button>
                       <button
                         onClick={() => toggleSaveItem(prod.id)}
                         className="text-rose-500 hover:text-rose-700 text-xs flex items-center gap-1 font-medium"

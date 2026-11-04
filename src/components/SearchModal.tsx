@@ -43,7 +43,7 @@ export const SearchModal: React.FC = () => {
       p.name.toLowerCase().includes(cleanQuery) ||
       p.brand.toLowerCase().includes(cleanQuery) ||
       p.category.toLowerCase().includes(cleanQuery) ||
-      p.terpenes.some((t) => t.toLowerCase().includes(cleanQuery))
+      (p.terpenes && p.terpenes.some((t) => t.toLowerCase().includes(cleanQuery)))
   ).slice(0, 5);
 
   const matchedPosts = BLOG_POSTS.filter(
@@ -153,7 +153,7 @@ export const SearchModal: React.FC = () => {
                         key={prod.id}
                         onClick={() => {
                           closeSearch();
-                          navigateTo('shop');
+                          navigateTo('product-detail', prod.id);
                         }}
                         className="w-full text-left p-2.5 rounded-xl hover:bg-[#FFFDF8] dark:hover:bg-[#041F18] border border-transparent hover:border-[#E9EDE7] dark:hover:border-white/10 flex items-center gap-3 group transition-all"
                       >

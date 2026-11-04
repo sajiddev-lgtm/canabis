@@ -60,20 +60,23 @@ export const AdminPage: React.FC = () => {
 
   // Modals state
   const [isNewProductOpen, setIsNewProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [newProd, setNewProd] = useState({
     name: '',
     sku: '',
-    brand: 'Albatross',
-    category: 'Premium Flower',
-    type: 'informational',
-    price: 0,
+    brand: 'Canabis Hub Hardware',
+    category: 'Accessories & Storage',
+    type: 'permitted_merchandise',
+    price: 29.00,
     in_stock: 1,
     description: '',
     short_description: '',
-    thc: '20.0%',
-    cbd: '0.5%',
-    image: '/src/assets/images/product_premium_flower_1793700802879.jpg',
+    thc: '',
+    cbd: '',
+    image: '/src/assets/images/acc_violet_glass_jars_1793782404345.jpg',
     status: 'published',
+    is_featured: 0,
+    badge: 'New',
   });
 
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
@@ -245,6 +248,55 @@ export const AdminPage: React.FC = () => {
       await fetch(`/api/products/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${authToken}` },
+      });
+      fetchAdminData();
+    } catch {}
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    try {
+      const res = await fetch(`/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(editingProduct),
+      });
+      if (res.ok) {
+        setEditingProduct(null);
+        fetchAdminData();
+      }
+    } catch {}
+  };
+
+  const handleToggleFeatured = async (product: any) => {
+    try {
+      const nextFeatured = !product.isFeatured;
+      await fetch(`/api/products/${product.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ is_featured: nextFeatured ? 1 : 0 }),
+      });
+      fetchAdminData();
+    } catch {}
+  };
+
+  const handleToggleStatus = async (product: any) => {
+    try {
+      const nextStatus = product.status === 'published' ? 'hidden' : 'published';
+      await fetch(`/api/products/${product.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
       });
       fetchAdminData();
     } catch {}
@@ -499,9 +551,11 @@ export const AdminPage: React.FC = () => {
                       <th className="p-4">SKU / Item</th>
                       <th className="p-4">Brand</th>
                       <th className="p-4">Category</th>
+                      <th className="p-4">Featured</th>
+                      <th className="p-4">Badge</th>
                       <th className="p-4">Classification</th>
-                      <th className="p-4">Price / THC</th>
-                      <th className="p-4">Status</th>
+                      <th className="p-4">Price / Potency</th>
+                      <th className="p-4">Visibility</th>
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -509,36 +563,82 @@ export const AdminPage: React.FC = () => {
                     {products.map((p) => (
                       <tr key={p.id} className="hover:bg-[#FFFDF8] dark:hover:bg-white/5 transition-colors">
                         <td className="p-4">
-                          <div className="font-bold text-[#063E30] dark:text-white">{p.name}</div>
-                          <div className="font-mono text-[10px] text-[#68756F] dark:text-white/50">{p.sku}</div>
+                          <div className="flex items-center gap-2.5">
+                            <img
+                              src={p.image}
+                              alt={p.name}
+                              className="w-9 h-9 rounded-lg object-cover shrink-0 border border-[#E9EDE7] dark:border-white/10"
+                            />
+                            <div>
+                              <div className="font-bold text-[#063E30] dark:text-white line-clamp-1">{p.name}</div>
+                              <div className="font-mono text-[10px] text-[#68756F] dark:text-white/50">{p.sku}</div>
+                            </div>
+                          </div>
                         </td>
                         <td className="p-4">{p.brand}</td>
                         <td className="p-4">{p.category}</td>
+                        <td className="p-4">
+                          <button
+                            onClick={() => handleToggleFeatured(p)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              p.isFeatured ? 'text-amber-400 hover:text-amber-500' : 'text-slate-300 hover:text-slate-400'
+                            }`}
+                            title={p.isFeatured ? 'Featured Product (Click to unfeature)' : 'Mark as Featured'}
+                          >
+                            <Star className={`w-4 h-4 ${p.isFeatured ? 'fill-current' : ''}`} />
+                          </button>
+                        </td>
+                        <td className="p-4">
+                          {p.badge ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F28A19]/15 text-[#F28A19] uppercase">
+                              {p.badge}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className="p-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             p.type === 'informational'
                               ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
                               : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                           }`}>
-                            {p.type === 'informational' ? 'Informational' : 'Permitted Non-Cannabis'}
+                            {p.type === 'informational' ? 'Monograph' : 'Permitted'}
                           </span>
                         </td>
-                        <td className="p-4 font-mono">
+                        <td className="p-4 font-mono font-bold">
                           {p.type === 'informational' ? `THC: ${p.thc}` : `€${p.price?.toFixed(2)}`}
                         </td>
                         <td className="p-4">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase">
+                          <button
+                            onClick={() => handleToggleStatus(p)}
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
+                              p.status === 'published'
+                                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-white/60'
+                            }`}
+                            title="Click to toggle visibility"
+                          >
                             {p.status}
-                          </span>
+                          </button>
                         </td>
                         <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleDeleteProduct(p.id)}
-                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                            title="Delete Listing"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => setEditingProduct({ ...p })}
+                              className="p-1.5 rounded-lg text-[#07543F] dark:text-[#F28A19] hover:bg-emerald-50 dark:hover:bg-white/10"
+                              title="Edit Listing Details"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                              title="Delete Listing"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -932,6 +1032,197 @@ export const AdminPage: React.FC = () => {
               <div className="pt-3 flex gap-2">
                 <button type="submit" className="flex-1 py-3 bg-[#07543F] text-white font-bold rounded-xl">Publish Article</button>
                 <button type="button" onClick={() => setIsNewPostOpen(false)} className="px-4 py-3 border border-[#E9EDE7] dark:border-white/10 rounded-xl">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#063E30] text-[#263A36] dark:text-white rounded-3xl max-w-2xl w-full p-8 border border-[#E9EDE7] dark:border-white/10 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#E9EDE7] dark:border-white/10">
+              <div>
+                <h3 className="font-bold text-lg text-[#063E30] dark:text-white">Edit Catalog Listing</h3>
+                <p className="text-[11px] text-[#68756F] dark:text-white/60">ID: {editingProduct.id} • SKU: {editingProduct.sku}</p>
+              </div>
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProduct} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold mb-1">Product Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.name || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10 focus:outline-none focus:border-[#07543F]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">SKU Number</label>
+                  <input
+                    type="text"
+                    value={editingProduct.sku || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Category</label>
+                  <select
+                    value={editingProduct.category || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                  >
+                    <option value="Storage & Preservation">Storage & Preservation</option>
+                    <option value="Hardware & Grinders">Hardware & Grinders</option>
+                    <option value="Measurement & Precision">Measurement & Precision</option>
+                    <option value="Organic Rolling Papers">Organic Rolling Papers</option>
+                    <option value="Botanical Care & Cleaning">Botanical Care & Cleaning</option>
+                    <option value="Lifestyle & Botanical Apparel">Lifestyle & Botanical Apparel</option>
+                    <option value="Accessories & Storage">Accessories & Storage</option>
+                    <option value="Dried Flower Monographs">Dried Flower Monographs</option>
+                    <option value="Balanced Hybrids">Balanced Hybrids</option>
+                    <option value="High-CBD Wellness">High-CBD Wellness</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Brand</label>
+                  <input
+                    type="text"
+                    value={editingProduct.brand || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Price (€ EUR)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingProduct.price ?? ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Visibility Status</label>
+                  <select
+                    value={editingProduct.status || 'published'}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                  >
+                    <option value="published">Published (Visible in Catalog)</option>
+                    <option value="draft">Draft (Admin Only)</option>
+                    <option value="hidden">Hidden</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Promotional Badge</label>
+                  <select
+                    value={editingProduct.badge || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, badge: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                  >
+                    <option value="">None</option>
+                    <option value="Featured">Featured</option>
+                    <option value="Popular">Popular</option>
+                    <option value="New">New</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col justify-end space-y-2 pb-1">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editingProduct.isFeatured)}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, isFeatured: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#07543F] accent-[#07543F]"
+                    />
+                    <span>Spotlight Featured Item</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer font-bold select-none">
+                    <input
+                      type="checkbox"
+                      checked={editingProduct.inStock !== false}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, inStock: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#07543F] accent-[#07543F]"
+                    />
+                    <span>In Stock Available</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Primary Product Image URL</label>
+                <input
+                  type="text"
+                  value={editingProduct.image || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                  placeholder="/src/assets/images/acc_violet_glass_jars_1793782404345.jpg"
+                  className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10 font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Short Description (Teaser for Grid Card)</label>
+                <input
+                  type="text"
+                  value={editingProduct.shortDescription || editingProduct.short_description || ''}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      shortDescription: e.target.value,
+                      short_description: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Full Detailed Description</label>
+                <textarea
+                  rows={4}
+                  value={editingProduct.description || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#FFFDF8] dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-white/10 leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3 border-t border-[#E9EDE7] dark:border-white/10">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-[#07543F] hover:bg-[#064232] text-white font-bold rounded-xl transition-all shadow-md"
+                >
+                  Save Changes to Database
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-5 py-3 border border-[#E9EDE7] dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all font-semibold"
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>

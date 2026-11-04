@@ -16,6 +16,7 @@ import { SearchModal } from './components/SearchModal';
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { ShopPage } from './pages/ShopPage';
+import { ProductDetailPage } from './pages/ProductDetailPage';
 import { BrandDirectoryPage } from './pages/BrandDirectoryPage';
 import { BrandDetailPage } from './pages/BrandDetailPage';
 import { FlowerFarmsPage } from './pages/FlowerFarmsPage';
@@ -30,9 +31,10 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { UserDashboardPage } from './pages/UserDashboardPage';
 import { AdminPage } from './pages/AdminPage';
+import { WhatsAppSupport } from './components/WhatsAppSupport';
 
 const AppContent: React.FC = () => {
-  const { currentPage } = useApp();
+  const { currentPage, wishlistFeedback } = useApp();
 
   // If in dedicated admin dashboard, render AdminPage full screen without consumer header/footer
   if (currentPage === 'admin') {
@@ -51,6 +53,8 @@ const AppContent: React.FC = () => {
         return <AboutPage />;
       case 'shop':
         return <ShopPage />;
+      case 'product-detail':
+        return <ProductDetailPage />;
       case 'brands':
         return <BrandDirectoryPage />;
       case 'brand-detail':
@@ -93,11 +97,26 @@ const AppContent: React.FC = () => {
       </main>
       <Footer />
 
-      {/* Global Interactive Modals & Drawers */}
+      {/* Global Interactive Modals, Drawers & Support */}
+      <WhatsAppSupport />
       <AgeVerificationModal />
       <SavedItemsDrawer />
       <CartDrawer />
       <SearchModal />
+
+      {/* Immediate Visual Feedback Toast for Wishlist */}
+      {wishlistFeedback && (
+        <div className="fixed bottom-6 left-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#063E30] text-white shadow-2xl border border-white/20 animate-fadeIn">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+            wishlistFeedback.action === 'added' ? 'bg-[#F28A19] text-white' : 'bg-slate-700 text-slate-300'
+          }`}>
+            <span className="text-xs font-bold">★</span>
+          </div>
+          <div>
+            <p className="font-bold text-xs">{wishlistFeedback.message}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

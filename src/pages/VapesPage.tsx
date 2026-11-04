@@ -5,146 +5,98 @@
 
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { BRANDS_DIRECTORY, PRODUCTS_DATA } from '../data/cannabisData';
-import { ShieldCheck, ArrowRight, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Layers, ShieldCheck, Zap, Bookmark, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export const VapesPage: React.FC = () => {
-  const { navigateTo } = useApp();
+  const { products, openProductModal, savedProductIds, toggleSaveProduct } = useApp();
 
-  const vapeBrands = BRANDS_DIRECTORY.filter((b) => b.category === 'vapes');
-  const vapeProducts = PRODUCTS_DATA.filter((p) => p.categorySlug === 'vapes');
+  const vapeProducts = products.filter(
+    (p) => p.category_slug === 'vapes' || p.category === 'Vaporizers & Pods'
+  );
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] dark:bg-[#041F18] py-12 text-[#263A36] dark:text-[#E2E8F0] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb & Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 text-xs text-[#68756F] dark:text-gray-400 mb-3">
-            <button onClick={() => navigateTo('home')} className="hover:text-[#07543F] dark:hover:text-emerald-400">
-              Home
-            </button>
-            <span>/</span>
-            <span className="text-[#07543F] dark:text-emerald-400 font-semibold">Vaporizers & Hardware</span>
-          </div>
-
-          <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] block mb-2">
-            HARDWARE SAFETY & PURITY
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+      {/* Header Banner */}
+      <div className="rounded-3xl bg-gradient-to-br from-cyan-950 via-[#063E30] to-[#07543F] text-white p-8 sm:p-12 relative overflow-hidden">
+        <div className="max-w-2xl space-y-4 relative z-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] px-3 py-1 rounded-full bg-cyan-900/60 inline-block">
+            Medical Ceramic Core Hardware & Clean Extracts
           </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#063E30] dark:text-white tracking-tight mb-4">
-            Medical Ceramic Vaporizers & Distillates
+          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit']">
+            Vaporizers & Precision Pod Systems
           </h1>
-          <p className="text-sm sm:text-base text-[#68756F] dark:text-gray-300 max-w-3xl leading-relaxed">
-            Engineering excellence meets botanical precision. All indexed vapor platforms utilize biocompatible porous ceramic cores, aircraft-grade aluminium shells, and zero chemical cutting agents (no PG, VG, MCT, or Vitamin E acetate).
+          <p className="text-xs sm:text-sm text-emerald-100/80 leading-relaxed">
+            Medical-grade porous ceramic heating cores designed to vaporize without scorching delicate monoterpenes. Verified 100% free of Vitamin E acetate, synthetic thinners (PG/VG/MCT), and heavy metal leeching.
           </p>
         </div>
+      </div>
 
-        {/* Safety Comparison Grid */}
-        <div className="bg-white dark:bg-[#073B2E]/60 rounded-3xl p-8 border border-[#E9EDE7] dark:border-white/10 shadow-sm mb-16">
-          <h2 className="text-xl font-bold text-[#063E30] dark:text-white mb-6">
-            Hardware Safety Benchmarks
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Certified Medical Standards
-              </h3>
-              <ul className="space-y-2 text-xs text-[#68756F] dark:text-gray-300">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 mt-1 shrink-0" />
-                  <span><strong>Biocompatible Ceramic Cores:</strong> Microporous matrix ensures uniform heat distribution without burning oil.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 mt-1 shrink-0" />
-                  <span><strong>Zero Heavy Metal Leaching:</strong> Tested to below 0.1 ppm for lead, nickel, and cadmium.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 mt-1 shrink-0" />
-                  <span><strong>100% Cannabis Terpenes:</strong> Single-origin native terpene fractions without synthetic aroma boosters.</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-rose-800 dark:text-rose-400 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                Unregulated Market Hazards Avoided
-              </h3>
-              <ul className="space-y-2 text-xs text-[#68756F] dark:text-gray-300">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400 mt-1 shrink-0" />
-                  <span><strong>No Synthetic Thinning Agents:</strong> Strict ban on propylene glycol, vegetable glycerin, and synthetic oils.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400 mt-1 shrink-0" />
-                  <span><strong>No Metal Solder Joints:</strong> Modern weldless and glue-free cartridge construction.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400 mt-1 shrink-0" />
-                  <span><strong>No Vitamin E Acetate:</strong> Fully verified through HPLC laboratory screening.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* 4 Indexed Vape Brands */}
-        <div>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-[#F28A19] block mb-1">
-                MEGA MENU COLUMN 5
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#063E30] dark:text-white">
-                Curated Vapor Brands
-              </h2>
-            </div>
-            <span className="text-xs text-[#68756F] dark:text-gray-400">4 Certified Brands</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {vapeBrands.map((brand) => (
-              <div
-                key={brand.id}
-                className="bg-white dark:bg-[#073B2E]/50 rounded-2xl p-6 border border-[#E9EDE7] dark:border-white/10 hover:border-[#07543F]/40 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-[#68756F] dark:text-gray-400">{brand.location}</span>
-                    <span className="text-[#F28A19] font-bold text-[10px] uppercase">
-                      {brand.founded}
-                    </span>
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {vapeProducts.map((p) => {
+          const isSaved = savedProductIds.includes(p.id);
+          return (
+            <div
+              key={p.id}
+              className="group p-5 rounded-3xl bg-white dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-emerald-800 shadow-xs hover:shadow-xl hover:border-[#07543F] transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="relative aspect-4/3 rounded-2xl overflow-hidden mb-4 bg-emerald-950">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#07543F] text-emerald-100 text-[10px] font-bold">
+                    {p.short_description}
                   </div>
-
-                  <h3
-                    onClick={() => navigateTo('brand-detail', brand.id)}
-                    className="font-extrabold text-xl text-[#063E30] dark:text-white group-hover:text-[#07543F] dark:group-hover:text-emerald-300 cursor-pointer mb-1.5 transition-colors"
-                  >
-                    {brand.name}
-                  </h3>
-
-                  <p className="text-xs font-medium text-[#F28A19] mb-3">
-                    {brand.tagline}
-                  </p>
-
-                  <p className="text-xs text-[#68756F] dark:text-gray-300 leading-relaxed mb-4">
-                    {brand.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-[#E9EDE7] dark:border-white/10">
                   <button
-                    onClick={() => navigateTo('brand-detail', brand.id)}
-                    className="w-full py-2.5 rounded-xl bg-[#FFFDF8] dark:bg-[#041F18]/80 hover:bg-[#07543F] dark:hover:bg-emerald-600 hover:text-white border border-[#E9EDE7] dark:border-white/10 text-xs font-bold text-[#063E30] dark:text-white transition-colors flex items-center justify-center gap-1.5"
+                    onClick={() => toggleSaveProduct(p.id)}
+                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-colors ${
+                      isSaved ? 'bg-[#07543F] text-white' : 'bg-white/80 dark:bg-emerald-950/80 text-slate-700 dark:text-white'
+                    }`}
                   >
-                    <span>View Hardware Specs</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
                   </button>
                 </div>
+
+                <span className="text-xs font-bold text-[#F28A19] block uppercase tracking-wider">
+                  {p.brand}
+                </span>
+
+                <h3 className="text-lg font-bold text-[#063E30] dark:text-white mt-1 group-hover:text-[#07543F] transition-colors">
+                  {p.name}
+                </h3>
+
+                <p className="text-xs text-[#68756F] dark:text-emerald-200/70 mt-2 line-clamp-2">
+                  {p.description}
+                </p>
+
+                <div className="mt-4 pt-3 border-t border-[#E9EDE7] dark:border-emerald-800 grid grid-cols-2 gap-2 text-center text-xs">
+                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800">
+                    <span className="text-[10px] text-slate-500 block">THC</span>
+                    <span className="font-extrabold text-[#07543F] dark:text-emerald-300">{p.thc}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-800">
+                    <span className="text-[10px] text-slate-500 block">CBD</span>
+                    <span className="font-extrabold text-[#F28A19]">{p.cbd}</span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+
+              <div className="mt-5 pt-3 border-t border-[#E9EDE7] dark:border-emerald-800 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-slate-500">{p.lab_batch}</span>
+                <button
+                  onClick={() => openProductModal(p)}
+                  className="px-3 py-1.5 rounded-xl bg-[#07543F] text-white text-xs font-bold hover:bg-[#063E30] flex items-center gap-1.5"
+                >
+                  <span>Hardware & Specs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -3,117 +3,66 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
-import { ShieldAlert, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Check, X } from 'lucide-react';
 
 export const AgeVerificationModal: React.FC = () => {
-  const { isAgeModalOpen, verifyAge, denyAge, isAgeVerified } = useApp();
-  const [birthYear, setBirthYear] = useState('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { isAgeVerified, verifyAge } = useApp();
 
-  if (!isAgeModalOpen) return null;
-
-  const handleConfirmAge = () => {
-    if (birthYear) {
-      const year = parseInt(birthYear, 10);
-      const currentYear = new Date().getFullYear();
-      if (isNaN(year) || year < 1920 || year > currentYear) {
-        setErrorMsg('Please enter a valid four-digit birth year.');
-        return;
-      }
-      if (currentYear - year < 18) {
-        setErrorMsg('You must be at least 18 years of age to access this platform.');
-        return;
-      }
-    }
-    verifyAge();
-  };
-
-  const handleExit = () => {
-    denyAge();
-    window.location.href = 'https://www.google.com';
-  };
+  if (isAgeVerified) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-[#073B2E] rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-[#E9EDE7] dark:border-white/10 text-center relative overflow-hidden transition-colors">
-        {/* Decorative Top Accent */}
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#07543F] via-[#F28A19] to-[#07543F]" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-[#FFFDF8] dark:bg-[#063E30] border border-[#E9EDE7] dark:border-emerald-800 rounded-3xl max-w-lg w-full p-8 shadow-2xl text-center relative overflow-hidden">
+        {/* Subtle decorative glow */}
+        <div className="absolute -top-12 -right-12 w-36 h-36 bg-[#F28A19]/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-[#07543F]/30 rounded-full blur-2xl pointer-events-none"></div>
 
-        {isAgeVerified && (
-          <button
-            onClick={() => useApp().setIsAgeModalOpen(false)}
-            className="absolute top-4 right-4 text-[#68756F] dark:text-gray-300 hover:text-[#263A36] dark:hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
-
-        {/* Brand Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-[#07543F] dark:bg-emerald-900/60 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-[#07543F]/20 border border-white/10">
-          <ShieldAlert className="w-9 h-9 text-[#F28A19]" />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#07543F] to-[#063E30] text-[#F28A19] mx-auto flex items-center justify-center mb-6 shadow-lg border border-emerald-500/20">
+          <ShieldCheck className="w-9 h-9" />
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 mb-2">
-          <span className="font-extrabold text-2xl tracking-tight text-[#063E30] dark:text-white">
-            CANABIS<span className="text-[#F28A19] ml-1">HUB</span>
-          </span>
-        </div>
+        <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#F28A19] px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950/60 inline-block mb-3">
+          German Law (CanG) Compliance
+        </span>
 
-        <h3 className="text-xl font-bold text-[#263A36] dark:text-white mb-2">
-          Age Verification Required (18+)
+        <h3 className="text-2xl font-extrabold text-[#063E30] dark:text-white font-['Outfit']">
+          Age Verification Required
         </h3>
 
-        <p className="text-sm text-[#68756F] dark:text-gray-300 leading-relaxed mb-6">
-          Under the German Cannabis Act (CanG) and federal youth protection regulations, the informational resources, brand profiles, and analytical test data on this platform are intended solely for adults aged 18 and older.
+        <p className="text-sm text-[#68756F] dark:text-emerald-200/80 mt-3 leading-relaxed">
+          In accordance with the German Federal Cannabis Act (Cannabisgesetz – CanG), access to certified botanical monographs, strain specifications, and laboratory testing profiles is strictly reserved for verified adults aged <strong className="text-[#07543F] dark:text-[#F28A19]">21 years and older</strong>.
         </p>
 
-        {/* Optional birth year verification */}
-        <div className="mb-6 bg-[#FFFDF8] dark:bg-[#041F18] border border-[#E9EDE7] dark:border-white/10 rounded-2xl p-4 text-left">
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#063E30] dark:text-white mb-1.5">
-            Confirm Your Birth Year (Optional Verification)
-          </label>
-          <input
-            type="number"
-            placeholder="e.g. 1998"
-            value={birthYear}
-            onChange={(e) => {
-              setBirthYear(e.target.value);
-              setErrorMsg(null);
+        <div className="my-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-left text-xs text-[#263A36] dark:text-emerald-200 space-y-1.5">
+          <div className="flex items-center gap-2 font-semibold text-[#07543F] dark:text-emerald-300">
+            <AlertCircle className="w-4 h-4 text-[#F28A19] shrink-0" />
+            <span>Youth Protection & Legal Monograph Policy:</span>
+          </div>
+          <p className="text-[11px] text-[#68756F] dark:text-emerald-300/70 pl-6">
+            By clicking "I Am 21 or Older", you confirm that you meet the statutory age threshold and accept responsible harm reduction guidelines.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => {
+              window.location.href = 'https://www.google.de';
             }}
-            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#073B2E]/50 border border-[#E9EDE7] dark:border-white/10 rounded-xl text-sm text-[#263A36] dark:text-white focus:outline-none focus:border-[#07543F] dark:focus:border-emerald-400 placeholder:text-gray-400"
-          />
-          {errorMsg && (
-            <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {errorMsg}
-            </p>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-          <button
-            onClick={handleConfirmAge}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#F28A19] hover:bg-[#e07c12] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+            className="py-3 px-4 rounded-xl border border-slate-300 dark:border-emerald-800 text-xs font-bold text-slate-600 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-emerald-900/40 transition-colors flex items-center justify-center gap-1.5"
           >
-            <CheckCircle className="w-4 h-4" />
-            I am 18 or Older — Enter
+            <X className="w-4 h-4" />
+            I Am Under 21
           </button>
-
           <button
-            onClick={handleExit}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white dark:bg-[#041F18] hover:bg-[#F4F6F2] dark:hover:bg-[#073B2E] text-[#68756F] dark:text-gray-200 border border-[#E9EDE7] dark:border-white/10 font-semibold text-sm transition-all"
+            onClick={verifyAge}
+            className="py-3 px-4 rounded-xl bg-[#07543F] hover:bg-[#063E30] text-white text-xs font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
           >
-            I am Under 18 — Exit
+            <Check className="w-4 h-4 text-[#F28A19]" />
+            I Am 21 or Older
           </button>
         </div>
-
-        {/* Legal Disclaimer */}
-        <p className="text-[11px] text-[#68756F]/80 dark:text-gray-400 leading-normal border-t border-[#E9EDE7] dark:border-white/10 pt-4">
-          By clicking &ldquo;Enter&rdquo;, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy. This verification is stored locally on your device.
-        </p>
       </div>
     </div>
   );

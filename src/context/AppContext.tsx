@@ -10,6 +10,7 @@ export type PageRoute =
   | 'home'
   | 'about'
   | 'shop'
+  | 'product-detail'
   | 'brands'
   | 'brand-detail'
   | 'flower-farms'
@@ -57,7 +58,18 @@ export interface NotificationItem {
   created_at: string;
 }
 
+export interface WishlistFeedback {
+  visible: boolean;
+  productId: string;
+  action: 'added' | 'removed';
+  message: string;
+}
+
 interface AppContextType {
+  // Products Catalog
+  allProducts: ProductItem[];
+  refreshProducts: () => Promise<void>;
+
   // Navigation
   currentPage: PageRoute;
   pageParam: string | null;
@@ -82,6 +94,11 @@ interface AppContextType {
   toggleSaveItem: (productId: string) => void;
   isItemSaved: (productId: string) => boolean;
   clearSavedItems: () => void;
+  wishlistFeedback: WishlistFeedback | null;
+
+  // Recently Viewed
+  recentlyViewedIds: string[];
+  addRecentlyViewed: (productId: string) => void;
 
   // Cart for permitted non-cannabis merchandise
   cart: CartItem[];
@@ -304,15 +321,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearCart = () => setCart([]);
 
-  // 5. Saved Items (Wishlist)
+  // Products Catalog loading & sync
+  const [allProducts, setAllProducts] = useState<ProductItem[]>(PRODUCTS_DATA);
+
+  const refreshProducts = async () => {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setAllProducts(data);
+          return;
+        }
+      }
+      setAllProducts(PRODUCTS_DATA);
+    } catch {
+      setAllProducts(PRODUCTS_DATA);
+    }
+  };
+
+  useEffect(() => {
+    refreshProducts();
+  }, []);
+
+  // 5. Saved Items (Wishlist) with Account Sync
   const [savedItemIds, setSavedItemIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('canabis_hub_saved_items');
-      return stored ? JSON.parse(stored) : ['prod-1', 'prod-2'];
+      return stored ? JSON.parse(stored) : ['acc-1', 'acc-5', 'prod-1'];
     } catch {
-      return ['prod-1', 'prod-2'];
+      return ['acc-1', 'acc-5', 'prod-1'];
     }
   });
+
+  const [wishlistFeedback, setWishlistFeedback] = useState<WishlistFeedback | null>(null);
+
+  // Sync with backend if logged in
+  useEffect(() => {
+    if (!authToken) return;
+    fetch('/api/saved', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((items: any[]) => {
+        if (Array.isArray(items)) {
+          const backendIds = items.filter((i) => i.item_type === 'product').map((i) => i.item_id);
+          setSavedItemIds((prev) => {
+            const merged = Array.from(new Set([...prev, ...backendIds]));
+            try {
+              localStorage.setItem('canabis_hub_saved_items', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+  }, [authToken]);
 
   useEffect(() => {
     try {
@@ -323,13 +387,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [savedItemIds]);
 
   const toggleSaveItem = (productId: string) => {
-    setSavedItemIds((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-    );
+    const isCurrentlySaved = savedItemIds.includes(productId);
+    const updated = isCurrentlySaved
+      ? savedItemIds.filter((id) => id !== productId)
+      : [...savedItemIds, productId];
+
+    setSavedItemIds(updated);
+
+    // Immediate visual feedback toast
+    setWishlistFeedback({
+      visible: true,
+      productId,
+      action: isCurrentlySaved ? 'removed' : 'added',
+      message: isCurrentlySaved
+        ? 'Removed from your Wishlist'
+        : currentUser
+        ? 'Saved to your Account Wishlist'
+        : 'Saved to your Wishlist (Sign in to sync)',
+    });
+
+    // Auto-dismiss feedback toast after 2.5 seconds
+    setTimeout(() => {
+      setWishlistFeedback((current) => (current?.productId === productId ? null : current));
+    }, 2500);
+
+    // Save to user account in database if logged in
+    if (authToken) {
+      fetch('/api/saved/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ itemType: 'product', itemId: productId }),
+      }).catch(() => {});
+    }
   };
 
   const isItemSaved = (productId: string) => savedItemIds.includes(productId);
   const clearSavedItems = () => setSavedItemIds([]);
+
+  // Recently Viewed Items
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('canabis_hub_recent_views');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addRecentlyViewed = (productId: string) => {
+    setRecentlyViewedIds((prev) => {
+      const filtered = prev.filter((id) => id !== productId);
+      const updated = [productId, ...filtered].slice(0, 8);
+      try {
+        localStorage.setItem('canabis_hub_recent_views', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
 
   // 6. Age Verification
   const [isAgeVerified, setIsAgeVerified] = useState<boolean>(() => {
@@ -396,22 +513,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [authToken]);
 
+  // Initial URL check for ?product=...
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const prodParam = params.get('product');
+      if (prodParam) {
+        setCurrentPage('product-detail');
+        setPageParam(prodParam);
+      }
+    } catch {}
+  }, []);
+
   const navigateTo = (page: PageRoute, param: string | null = null) => {
     setCurrentPage(page);
     setPageParam(param);
     if (page === 'admin') {
       window.history.pushState({}, '', '/admin');
+    } else if (page === 'product-detail' && param) {
+      window.history.pushState({}, '', `/?product=${param}`);
+    } else if (page === 'shop') {
+      window.history.pushState({}, '', '/?page=shop');
     } else {
       window.history.pushState({}, '', '/');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const savedProducts = PRODUCTS_DATA.filter((p) => savedItemIds.includes(p.id));
+  const savedProducts = allProducts.filter((p) => savedItemIds.includes(p.id));
 
   return (
     <AppContext.Provider
       value={{
+        allProducts,
+        refreshProducts,
         currentPage,
         pageParam,
         navigateTo,
@@ -429,6 +564,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleSaveItem,
         isItemSaved,
         clearSavedItems,
+        wishlistFeedback,
+        recentlyViewedIds,
+        addRecentlyViewed,
         cart,
         addToCart,
         removeFromCart,
