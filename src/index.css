@@ -81,3 +81,145 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #F28A19;
 }
+
+/* ==========================================================================
+   GLOWING BOXY NAVIGATION & ACTIVE PAGE EFFECT
+   ========================================================================== */
+
+.nav-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #263A36;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(7, 84, 63, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.nav-box:hover {
+  border-color: #07543F;
+  background: rgba(7, 84, 63, 0.08);
+  color: #07543F;
+  box-shadow: 0 0 16px rgba(7, 84, 63, 0.24), 0 2px 6px rgba(7, 84, 63, 0.08);
+  transform: translateY(-1.5px);
+}
+
+.nav-box.is-active {
+  border-color: #07543F;
+  background: rgba(7, 84, 63, 0.12);
+  color: #07543F;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(7, 84, 63, 0.32), inset 0 0 10px rgba(7, 84, 63, 0.08), 0 2px 8px rgba(7, 84, 63, 0.12);
+  transform: translateY(0);
+}
+
+/* Dark Mode Glowing Box */
+.dark .nav-box {
+  color: #E2E8F0;
+  background: rgba(7, 59, 46, 0.55);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.dark .nav-box:hover {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.16);
+  color: #a7f3d0;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.45), 0 0 8px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1.5px);
+}
+
+.dark .nav-box.is-active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.22);
+  color: #d1fae5;
+  font-weight: 700;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.55), inset 0 0 14px rgba(16, 185, 129, 0.18), 0 0 10px rgba(16, 185, 129, 0.35);
+  transform: translateY(0);
+}
+
+/* Amber Variant for Shop & Highlight Items */
+.nav-box-amber {
+  border-color: rgba(242, 138, 25, 0.35);
+  color: #c26207;
+  background: rgba(254, 243, 199, 0.5);
+}
+
+.nav-box-amber:hover {
+  border-color: #F28A19;
+  background: rgba(242, 138, 25, 0.12);
+  color: #b45309;
+  box-shadow: 0 0 18px rgba(242, 138, 25, 0.35), 0 2px 6px rgba(242, 138, 25, 0.12);
+}
+
+.nav-box-amber.is-active {
+  border-color: #F28A19;
+  background: rgba(242, 138, 25, 0.16);
+  color: #9a3412;
+  box-shadow: 0 0 22px rgba(242, 138, 25, 0.45), inset 0 0 12px rgba(242, 138, 25, 0.12), 0 2px 8px rgba(242, 138, 25, 0.15);
+}
+
+.dark .nav-box-amber {
+  border-color: rgba(242, 138, 25, 0.4);
+  color: #fed7aa;
+  background: rgba(120, 53, 15, 0.28);
+}
+
+.dark .nav-box-amber:hover {
+  border-color: #F28A19;
+  background: rgba(242, 138, 25, 0.22);
+  color: #ffedd5;
+  box-shadow: 0 0 22px rgba(242, 138, 25, 0.55), 0 0 10px rgba(242, 138, 25, 0.3);
+}
+
+.dark .nav-box-amber.is-active {
+  border-color: #F28A19;
+  background: rgba(242, 138, 25, 0.28);
+  color: #fff7ed;
+  box-shadow: 0 0 26px rgba(242, 138, 25, 0.65), inset 0 0 14px rgba(242, 138, 25, 0.22), 0 0 12px rgba(242, 138, 25, 0.4);
+}
+
+/* Active indicator dot */
+.nav-box-glow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #07543F;
+  box-shadow: 0 0 8px rgba(7, 84, 63, 0.8);
+  flex-shrink: 0;
+  animation: navPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.dark .nav-box-glow-dot {
+  background-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.9);
+}
+
+.nav-box-amber .nav-box-glow-dot {
+  background-color: #F28A19;
+  box-shadow: 0 0 10px rgba(242, 138, 25, 0.9);
+}
+
+@keyframes navPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-box, .nav-box:hover, .nav-box.is-active, .nav-box-glow-dot {
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
