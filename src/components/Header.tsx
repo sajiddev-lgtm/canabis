@@ -183,7 +183,7 @@ export const Header: React.FC = () => {
                         {newBrands.map((b) => (
                           <li key={b.id}>
                             <button
-                              onClick={() => handleBrandClick(b.slug)}
+                              onClick={() => handleBrandClick(b.slug || b.id)}
                               className="text-left text-xs font-medium text-[#263A36] dark:text-emerald-100 hover:text-[#F28A19] dark:hover:text-[#F28A19] transition-colors py-0.5 block w-full truncate"
                             >
                               {b.name}
@@ -203,7 +203,7 @@ export const Header: React.FC = () => {
                         {flowerFarms.map((b) => (
                           <li key={b.id}>
                             <button
-                              onClick={() => handleBrandClick(b.slug)}
+                              onClick={() => handleBrandClick(b.slug || b.id)}
                               className="text-left text-xs font-medium text-[#263A36] dark:text-emerald-100 hover:text-[#07543F] dark:hover:text-[#F28A19] transition-colors py-0.5 block w-full truncate"
                             >
                               {b.name}
@@ -223,7 +223,7 @@ export const Header: React.FC = () => {
                         {staffPicks.map((b) => (
                           <li key={b.id}>
                             <button
-                              onClick={() => handleBrandClick(b.slug)}
+                              onClick={() => handleBrandClick(b.slug || b.id)}
                               className="text-left text-xs font-medium text-[#263A36] dark:text-emerald-100 hover:text-[#07543F] dark:hover:text-[#F28A19] transition-colors py-0.5 block w-full truncate"
                             >
                               {b.name}
@@ -243,7 +243,7 @@ export const Header: React.FC = () => {
                         {ediblesMore.map((b) => (
                           <li key={b.id}>
                             <button
-                              onClick={() => handleBrandClick(b.slug)}
+                              onClick={() => handleBrandClick(b.slug || b.id)}
                               className="text-left text-xs font-medium text-[#263A36] dark:text-emerald-100 hover:text-[#07543F] dark:hover:text-[#F28A19] transition-colors py-0.5 block w-full truncate"
                             >
                               {b.name}
@@ -263,7 +263,7 @@ export const Header: React.FC = () => {
                         {vapes.map((b) => (
                           <li key={b.id}>
                             <button
-                              onClick={() => handleBrandClick(b.slug)}
+                              onClick={() => handleBrandClick(b.slug || b.id)}
                               className="text-left text-xs font-medium text-[#263A36] dark:text-emerald-100 hover:text-[#07543F] dark:hover:text-[#F28A19] transition-colors py-0.5 block w-full truncate"
                             >
                               {b.name}

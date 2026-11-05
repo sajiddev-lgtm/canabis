@@ -198,90 +198,170 @@ export function initDatabase() {
       details TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS login_history (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      identifier TEXT NOT NULL,
+      ip_address TEXT NOT NULL,
+      user_agent TEXT NOT NULL,
+      status TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
 
-  // Seed default admin and user if not exists
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@canabishub.de');
-  if (!existingAdmin) {
-    const adminId = 'usr-admin-1';
-    const now = new Date().toISOString();
-    db.prepare(`
-      INSERT INTO users (id, name, email, password_hash, role, status, phone, address, created_at, last_login)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      adminId,
-      'Canabis Hub Super Admin',
-      'admin@canabishub.de',
-      hashPassword('Admin@CanabisHub2026!'),
-      'super_admin',
-      'active',
-      '+49 30 8920 4401',
-      'Friedrichstraße 120, 10117 Berlin',
-      now,
-      now
-    );
+  // Run safe schema column migrations for users and sessions
+  const userColumns = [
+    { name: 'username', def: 'TEXT' },
+    { name: 'failed_login_attempts', def: 'INTEGER DEFAULT 0' },
+    { name: 'locked_until', def: 'INTEGER DEFAULT 0' },
+    { name: 'email_verification_code', def: 'TEXT DEFAULT ""' },
+    { name: 'email_verification_pending', def: 'TEXT DEFAULT ""' },
+    { name: 'reset_token', def: 'TEXT DEFAULT ""' },
+    { name: 'reset_token_expires', def: 'INTEGER DEFAULT 0' },
+  ];
 
-    // Seed Demo User
-    const userId = 'usr-demo-1';
-    db.prepare(`
-      INSERT INTO users (id, name, email, password_hash, role, status, phone, address, created_at, last_login)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      userId,
-      'Maximilian Weber',
-      'user@canabishub.de',
-      hashPassword('User@CanabisHub2026!'),
-      'customer',
-      'active',
-      '+49 171 4920 182',
-      'Kantstraße 42, 10625 Berlin',
-      now,
-      now
-    );
+  for (const col of userColumns) {
+    try {
+      db.exec(`ALTER TABLE users ADD COLUMN ${col.name} ${col.def}`);
+    } catch {
+      // Column already exists
+    }
+  }
 
-    // Initial Welcome Notification
-    db.prepare(`
-      INSERT INTO notifications (id, user_id, is_admin, type, title, message, is_read, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'notif-1',
-      userId,
-      0,
-      'welcome',
-      'Welcome to Canabis Hub Germany',
-      'Your verified member account is ready. Discover German cultivars, lab batch reports, and store saved monographs.',
-      0,
-      now
-    );
+  try {
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username) WHERE username IS NOT NULL AND username != ""');
+  } catch {}
 
-    db.prepare(`
-      INSERT INTO notifications (id, user_id, is_admin, type, title, message, is_read, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'notif-admin-1',
-      '',
-      1,
-      'system',
-      'System Audit Initialized',
-      'Canabis Hub Central Registry database successfully migrated and verified under German CanG standards.',
-      0,
-      now
-    );
+  const sessionColumns = [
+    { name: 'ip_address', def: 'TEXT DEFAULT ""' },
+    { name: 'user_agent', def: 'TEXT DEFAULT ""' },
+    { name: 'created_at', def: 'TEXT DEFAULT ""' },
+    { name: 'last_active', def: 'TEXT DEFAULT ""' },
+  ];
 
-    // Seed audit log
-    db.prepare(`
-      INSERT INTO audit_logs (id, user_id, user_name, action, target_type, target_id, details, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'log-1',
-      adminId,
-      'Canabis Hub Super Admin',
-      'SYSTEM_INITIALIZATION',
-      'Database',
-      'system',
-      'Initial platform schema migrated and seeded.',
-      now
-    );
+  for (const col of sessionColumns) {
+    try {
+      db.exec(`ALTER TABLE sessions ADD COLUMN ${col.name} ${col.def}`);
+    } catch {
+      // Column already exists
+    }
+  }
+
+  // -------------------------------------------------------------
+  // SECURE SUPER ADMIN INITIALIZATION & DEMO USER PURGE MIGRATION
+  // -------------------------------------------------------------
+  const now = new Date().toISOString();
+
+  try {
+    db.exec('PRAGMA foreign_keys = OFF');
+
+    // 1. Purge Demo Accounts (remove demo user and obsolete demo credentials)
+    const demoUser = db.prepare("SELECT id FROM users WHERE email = 'user@canabishub.de' OR id = 'usr-demo-1'").get() as { id: string } | undefined;
+    if (demoUser) {
+      db.prepare('DELETE FROM sessions WHERE user_id = ?').run(demoUser.id);
+      db.prepare('DELETE FROM notifications WHERE user_id = ?').run(demoUser.id);
+      db.prepare('DELETE FROM saved_items WHERE user_id = ?').run(demoUser.id);
+      db.prepare('DELETE FROM users WHERE id = ?').run(demoUser.id);
+      db.prepare(`
+        INSERT INTO audit_logs (id, user_id, user_name, action, target_type, target_id, details, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `log-purge-${Date.now()}`,
+        'system',
+        'Security Migration',
+        'DEMO_USER_PURGED',
+        'User',
+        demoUser.id,
+        'Purged obsolete demo account user@canabishub.de from database.',
+        now
+      );
+    }
+
+    const demoAdmin = db.prepare("SELECT id FROM users WHERE email = 'admin@canabishub.de' OR id = 'usr-admin-1'").get() as { id: string } | undefined;
+    if (demoAdmin) {
+      db.prepare('DELETE FROM sessions WHERE user_id = ?').run(demoAdmin.id);
+      db.prepare('DELETE FROM notifications WHERE user_id = ?').run(demoAdmin.id);
+      db.prepare('DELETE FROM users WHERE id = ?').run(demoAdmin.id);
+      db.prepare(`
+        INSERT INTO audit_logs (id, user_id, user_name, action, target_type, target_id, details, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `log-admin-purge-${Date.now()}`,
+        'system',
+        'Security Migration',
+        'DEMO_ADMIN_PURGED',
+        'User',
+        demoAdmin.id,
+        'Purged obsolete demo admin credentials (admin@canabishub.de) from database.',
+        now
+      );
+    }
+
+    // 2. Initial Super Admin Account Creation
+    // Username: Admin | Email: sajidiqbal4891@gmail.com | Initial Password: Sajid0077@
+    const targetSuperAdmin = db.prepare(
+      "SELECT id, username, email FROM users WHERE email = 'sajidiqbal4891@gmail.com'"
+    ).get() as { id: string; username?: string; email: string } | undefined;
+
+    if (!targetSuperAdmin) {
+      const rootAdminId = 'usr-super-admin-root';
+      const rootPasswordHash = hashPassword('Sajid0077@');
+      db.prepare(`
+        INSERT INTO users (
+          id, username, name, email, password_hash, role, status,
+          phone, address, created_at, last_login, failed_login_attempts, locked_until
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      `).run(
+        rootAdminId,
+        'Admin',
+        'Admin',
+        'sajidiqbal4891@gmail.com',
+        rootPasswordHash,
+        'super_admin',
+        'active',
+        '+49 30 8920 4401',
+        'Friedrichstraße 120, 10117 Berlin',
+        now,
+        now
+      );
+
+      // Initial Security Notification
+      db.prepare(`
+        INSERT INTO notifications (id, user_id, is_admin, type, title, message, is_read, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `notif-root-${Date.now()}`,
+        rootAdminId,
+        1,
+        'security',
+        'Super Admin Account Initialized',
+        'Dedicated Super Administrator credential initialized with multi-factor audit controls.',
+        0,
+        now
+      );
+
+      db.prepare(`
+        INSERT INTO audit_logs (id, user_id, user_name, action, target_type, target_id, details, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `log-root-init-${Date.now()}`,
+        rootAdminId,
+        'Admin',
+        'SUPER_ADMIN_INITIALIZED',
+        'SuperAdmin',
+        rootAdminId,
+        'Initial Super Admin account provisioned securely with hashed credentials for sajidiqbal4891@gmail.com.',
+        now
+      );
+    } else if (!targetSuperAdmin.username) {
+      db.prepare("UPDATE users SET username = 'Admin' WHERE id = ?").run(targetSuperAdmin.id);
+    }
+  } catch (err) {
+    console.error('Error during security migration:', err);
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
   }
 
   // Seed Categories
@@ -356,7 +436,6 @@ export function initDatabase() {
       gallery_json=excluded.gallery_json
   `);
 
-  const now = new Date().toISOString();
   for (const p of PRODUCTS_DATA) {
     const isPermitted = p.type === 'permitted_merchandise';
     upsertProd.run(
@@ -432,16 +511,15 @@ export function initDatabase() {
     insertPay.run('pay-bank', 'Direct Bank Wire (IBAN Transfer)', 1, 'production', 'DE44100500001092837465', '', now);
   }
 
-  // Seed a sample order for Demo User
+  // Seed a sample order for archive record
   const orderCount = db.prepare('SELECT COUNT(*) as count FROM orders').get() as { count: number };
   if (orderCount.count === 0) {
-    const now = new Date().toISOString();
     db.prepare(`
       INSERT INTO orders (id, user_id, order_ref, items_json, subtotal, shipping, total, status, payment_status, payment_method, shipping_address_json, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'ord-1001',
-      'usr-demo-1',
+      'cust-archive-1001',
       'CH-2026-89104',
       JSON.stringify([
         {

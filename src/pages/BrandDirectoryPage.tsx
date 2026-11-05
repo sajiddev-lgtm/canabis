@@ -142,7 +142,7 @@ export const BrandDirectoryPage: React.FC = () => {
                     Flagship Formats:
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {brand.signature_products.map((sig, i) => (
+                    {brand.signature_products.map((sig: string, i: number) => (
                       <span
                         key={i}
                         className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-emerald-900/40 text-slate-700 dark:text-emerald-200"
@@ -222,7 +222,7 @@ export const BrandDirectoryPage: React.FC = () => {
                   Signature Cultivars & Formulations:
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {activeBrandModal.signature_products.map((p, i) => (
+                  {(activeBrandModal.signature_products || activeBrandModal.signatureProducts || []).map((p: string, i: number) => (
                     <span
                       key={i}
                       className="px-3 py-1.5 rounded-xl text-xs font-medium bg-white dark:bg-emerald-900 border border-[#E9EDE7] dark:border-emerald-800 text-[#07543F] dark:text-emerald-200"

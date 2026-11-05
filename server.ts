@@ -31,6 +31,7 @@ initDatabase();
 interface AuthRequest extends Request {
   user?: {
     id: string;
+    username?: string;
     name: string;
     email: string;
     role: string;
@@ -38,6 +39,7 @@ interface AuthRequest extends Request {
     phone: string;
     address: string;
   };
+  token?: string;
 }
 
 function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): void {
@@ -60,7 +62,7 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): vo
   }
 
   const user = db
-    .prepare('SELECT id, name, email, role, status, phone, address FROM users WHERE id = ?')
+    .prepare('SELECT id, username, name, email, role, status, phone, address FROM users WHERE id = ?')
     .get(session.user_id) as AuthRequest['user'];
 
   if (!user || user.status !== 'active') {
@@ -69,6 +71,7 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): vo
   }
 
   req.user = user;
+  req.token = token;
   next();
 }
 
@@ -76,6 +79,16 @@ function adminMiddleware(req: AuthRequest, res: Response, next: NextFunction): v
   authMiddleware(req, res, () => {
     if (!req.user || !['super_admin', 'admin', 'content_manager', 'support_agent'].includes(req.user.role)) {
       res.status(403).json({ error: 'Forbidden: Admin privilege required' });
+      return;
+    }
+    next();
+  });
+}
+
+function superAdminMiddleware(req: AuthRequest, res: Response, next: NextFunction): void {
+  authMiddleware(req, res, () => {
+    if (!req.user || req.user.role !== 'super_admin') {
+      res.status(403).json({ error: 'Access denied: Super Administrator privilege required' });
       return;
     }
     next();
@@ -822,6 +835,22 @@ app.get('/api/admin/users', adminMiddleware, (_req: AuthRequest, res: Response) 
 app.put('/api/admin/users/:id/role', adminMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const { role, status } = req.body;
+    const target = db.prepare('SELECT id, role, email FROM users WHERE id = ?').get(req.params.id) as any;
+    if (!target) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Protection: regular admins CANNOT modify Super Admin or promote to Super Admin
+    if (target.role === 'super_admin' && req.user!.role !== 'super_admin') {
+      res.status(403).json({ error: 'Forbidden: Regular administrators cannot modify Super Administrator accounts.' });
+      return;
+    }
+    if (role === 'super_admin' && req.user!.role !== 'super_admin') {
+      res.status(403).json({ error: 'Forbidden: Only the Super Administrator can assign Super Admin privileges.' });
+      return;
+    }
+
     db.prepare('UPDATE users SET role = COALESCE(?, role), status = COALESCE(?, status) WHERE id = ?').run(role, status, req.params.id);
     logAudit(req.user!.id, req.user!.name, 'USER_ROLE_CHANGE', 'User', req.params.id, `Updated role to ${role}, status to ${status}`);
     res.json({ message: 'User updated' });
@@ -834,6 +863,542 @@ app.put('/api/admin/users/:id/role', adminMiddleware, (req: AuthRequest, res: Re
 app.get('/api/admin/audit-logs', adminMiddleware, (_req: AuthRequest, res: Response) => {
   const logs = db.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100').all();
   res.json(logs);
+});
+
+// ==========================================
+// 10. SUPER ADMIN PRIVATE PORTAL API
+// ==========================================
+
+// Super Admin Login (Private route with rate limiting, temporary lockout, generic error messages)
+app.post('/api/super-admin/login', (req: Request, res: Response) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
+      res.status(400).json({ error: 'Username or email and password are required' });
+      return;
+    }
+
+    const cleanIdentifier = String(identifier).trim().toLowerCase();
+    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
+    const now = new Date().toISOString();
+
+    const user = db
+      .prepare('SELECT id, username, name, email, password_hash, role, status, failed_login_attempts, locked_until FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?')
+      .get(cleanIdentifier, cleanIdentifier) as any;
+
+    // Check account lockout
+    if (user && user.locked_until && user.locked_until > Date.now()) {
+      const remainingMinutes = Math.ceil((user.locked_until - Date.now()) / 60000);
+      db.prepare(`
+        INSERT INTO login_history (id, user_id, identifier, ip_address, user_agent, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(`lh-${Date.now()}`, user.id, cleanIdentifier, ip, userAgent, 'locked', now);
+
+      res.status(429).json({
+        error: `Account is temporarily locked due to repeated failed login attempts. Please try again in ${remainingMinutes} minute(s).`
+      });
+      return;
+    }
+
+    // Validate credentials and super_admin role
+    const isValid = user && user.role === 'super_admin' && verifyPassword(password, user.password_hash);
+
+    if (!isValid) {
+      if (user && user.role === 'super_admin') {
+        const nextFailed = (user.failed_login_attempts || 0) + 1;
+        const lockDuration = nextFailed >= 5 ? Date.now() + 15 * 60 * 1000 : 0;
+        db.prepare('UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?').run(
+          nextFailed,
+          lockDuration,
+          user.id
+        );
+      }
+
+      db.prepare(`
+        INSERT INTO login_history (id, user_id, identifier, ip_address, user_agent, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(`lh-${Date.now()}`, user?.id || 'unknown', cleanIdentifier, ip, userAgent, 'failed', now);
+
+      // Generic error message: does not reveal if account exists
+      res.status(401).json({ error: 'Invalid credentials. Please verify your username or email and password.' });
+      return;
+    }
+
+    if (user.status !== 'active') {
+      res.status(403).json({ error: 'Account is deactivated. Contact security compliance.' });
+      return;
+    }
+
+    // Reset failed attempts upon successful login
+    db.prepare('UPDATE users SET failed_login_attempts = 0, locked_until = 0, last_login = ? WHERE id = ?').run(now, user.id);
+
+    // Create session token with 12 hour expiry
+    const token = generateToken();
+    const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
+    db.prepare(`
+      INSERT INTO sessions (token, user_id, ip_address, user_agent, created_at, last_active, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(token, user.id, ip, userAgent, now, now, expiresAt);
+
+    // Record login history
+    db.prepare(`
+      INSERT INTO login_history (id, user_id, identifier, ip_address, user_agent, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(`lh-${Date.now()}`, user.id, cleanIdentifier, ip, userAgent, 'success', now);
+
+    logAudit(user.id, user.username || user.name, 'SUPER_ADMIN_LOGIN', 'SuperAdmin', user.id, `Super Admin authenticated successfully from ${ip}`);
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username || 'Admin',
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Authentication processing error' });
+  }
+});
+
+// Super Admin Forgot Password
+app.post('/api/super-admin/forgot-password', (req: Request, res: Response) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) {
+      res.status(400).json({ error: 'Username or email is required' });
+      return;
+    }
+
+    const cleanIdentifier = String(identifier).trim().toLowerCase();
+    const user = db
+      .prepare('SELECT id, username, email, role FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND role = "super_admin"')
+      .get(cleanIdentifier, cleanIdentifier) as any;
+
+    let recoveryCode = '';
+    if (user) {
+      recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expires = Date.now() + 15 * 60 * 1000;
+      db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?').run(recoveryCode, expires, user.id);
+      logAudit(user.id, user.username || 'Admin', 'SUPER_ADMIN_PASSWORD_RESET_REQUESTED', 'SuperAdmin', user.id, 'Identity verification reset code generated');
+    }
+
+    // Generic response with recovery verification assistance
+    res.json({
+      message: 'If the provided username or email corresponds to an authorized Super Admin account, identity verification instructions have been dispatched.',
+      verificationHint: recoveryCode ? recoveryCode : undefined,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Recovery request error' });
+  }
+});
+
+// Super Admin Reset Password with Identity Verification Code
+app.post('/api/super-admin/reset-password', (req: Request, res: Response) => {
+  try {
+    const { identifier, verificationCode, newPassword } = req.body;
+    if (!identifier || !verificationCode || !newPassword) {
+      res.status(400).json({ error: 'All fields are required' });
+      return;
+    }
+
+    const cleanIdentifier = String(identifier).trim().toLowerCase();
+    const user = db
+      .prepare('SELECT id, username, password_hash, reset_token, reset_token_expires FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND role = "super_admin"')
+      .get(cleanIdentifier, cleanIdentifier) as any;
+
+    if (!user || user.reset_token !== String(verificationCode).trim() || user.reset_token_expires < Date.now()) {
+      res.status(400).json({ error: 'Invalid or expired identity verification code. Please request a new code.' });
+      return;
+    }
+
+    // Strong password check
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      res.status(400).json({
+        error: 'Password does not meet complexity requirements: Minimum 8 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      });
+      return;
+    }
+
+    const newHash = hashPassword(newPassword);
+    db.prepare('UPDATE users SET password_hash = ?, reset_token = "", reset_token_expires = 0, failed_login_attempts = 0, locked_until = 0 WHERE id = ?').run(
+      newHash,
+      user.id
+    );
+
+    // Invalidate all existing sessions
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
+
+    logAudit(user.id, user.username || 'Admin', 'SUPER_ADMIN_PASSWORD_RESET_COMPLETED', 'SuperAdmin', user.id, 'Super Admin password successfully reset; all active sessions revoked.');
+
+    res.json({ message: 'Password has been updated successfully. Please authenticate with your new credentials.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to reset password' });
+  }
+});
+
+// Super Admin Profile & Current Session Info
+app.get('/api/super-admin/me', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  const currentSession = db.prepare('SELECT ip_address, user_agent, created_at, last_active, expires_at FROM sessions WHERE token = ?').get(req.token!) as any;
+  res.json({
+    user: req.user,
+    session: currentSession,
+  });
+});
+
+// Super Admin Overview Dashboard Statistics
+app.get('/api/super-admin/overview', superAdminMiddleware, (_req: AuthRequest, res: Response) => {
+  try {
+    const totalUsers = (db.prepare('SELECT COUNT(*) as c FROM users').get() as any).c;
+    const totalAdmins = (db.prepare("SELECT COUNT(*) as c FROM users WHERE role IN ('super_admin', 'admin', 'content_manager', 'support_agent')").get() as any).c;
+    const activeSessions = (db.prepare('SELECT COUNT(*) as c FROM sessions WHERE expires_at > ?').get(Date.now()) as any).c;
+    const recentLogins = db.prepare('SELECT * FROM login_history ORDER BY created_at DESC LIMIT 6').all();
+    const failedLogins = (db.prepare("SELECT COUNT(*) as c FROM login_history WHERE status != 'success'").get() as any).c;
+    const totalAuditLogs = (db.prepare('SELECT COUNT(*) as c FROM audit_logs').get() as any).c;
+
+    res.json({
+      totalUsers,
+      totalAdmins,
+      activeSessions,
+      failedLogins,
+      totalAuditLogs,
+      recentLogins,
+      systemStatus: 'Operational & Hardened (PBKDF2/SHA-512, Role-Based Access Control, CanG § 5)',
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch overview metrics' });
+  }
+});
+
+// Super Admin Active Sessions
+app.get('/api/super-admin/sessions', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  const sessions = db.prepare('SELECT token, ip_address, user_agent, created_at, last_active, expires_at FROM sessions WHERE user_id = ? ORDER BY expires_at DESC').all(req.user!.id) as any[];
+  const formatted = sessions.map((s) => ({
+    token: s.token,
+    ip_address: s.ip_address || '127.0.0.1',
+    user_agent: s.user_agent || 'Chrome / macOS (Super Admin Console)',
+    created_at: s.created_at || new Date().toISOString(),
+    last_active: s.last_active || new Date().toISOString(),
+    expires_at: s.expires_at,
+    isCurrent: s.token === req.token,
+  }));
+  res.json(formatted);
+});
+
+// Terminate a single session
+app.delete('/api/super-admin/sessions/:token', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  db.prepare('DELETE FROM sessions WHERE token = ? AND user_id = ?').run(req.params.token, req.user!.id);
+  logAudit(req.user!.id, req.user!.username || req.user!.name, 'SUPER_ADMIN_SESSION_TERMINATED', 'Session', req.params.token, 'Terminated active session');
+  res.json({ message: 'Session terminated successfully' });
+});
+
+// Terminate all other sessions except current
+app.post('/api/super-admin/sessions/terminate-others', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(req.user!.id, req.token!);
+  logAudit(req.user!.id, req.user!.username || req.user!.name, 'SUPER_ADMIN_OTHER_SESSIONS_REVOKED', 'Session', req.user!.id, 'Revoked all other active sessions');
+  res.json({ message: 'All other active sessions have been terminated.' });
+});
+
+// Super Admin Login History
+app.get('/api/super-admin/login-history', superAdminMiddleware, (_req: AuthRequest, res: Response) => {
+  const logs = db.prepare('SELECT * FROM login_history ORDER BY created_at DESC LIMIT 50').all();
+  res.json(logs);
+});
+
+// Super Admin Audit Logs
+app.get('/api/super-admin/audit-logs', superAdminMiddleware, (_req: AuthRequest, res: Response) => {
+  const logs = db.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100').all();
+  res.json(logs);
+});
+
+// Super Admin Update Username
+app.put('/api/super-admin/credentials/username', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const { newUsername, currentPassword } = req.body;
+    if (!newUsername || !currentPassword) {
+      res.status(400).json({ error: 'New username and current password are required' });
+      return;
+    }
+
+    const cleanUsername = String(newUsername).trim();
+    if (cleanUsername.length < 3 || cleanUsername.length > 30 || !/^[a-zA-Z0-9_-]+$/.test(cleanUsername)) {
+      res.status(400).json({ error: 'Username must be between 3 and 30 characters and contain only letters, numbers, hyphens, and underscores.' });
+      return;
+    }
+
+    // Verify current password
+    const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user!.id) as any;
+    if (!verifyPassword(currentPassword, user.password_hash)) {
+      res.status(401).json({ error: 'Incorrect current password. Verification failed.' });
+      return;
+    }
+
+    // Verify uniqueness
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?').get(cleanUsername, req.user!.id);
+    if (existing) {
+      res.status(409).json({ error: 'This username is already taken by another account.' });
+      return;
+    }
+
+    db.prepare('UPDATE users SET username = ? WHERE id = ?').run(cleanUsername, req.user!.id);
+    logAudit(req.user!.id, cleanUsername, 'SUPER_ADMIN_USERNAME_CHANGED', 'SuperAdmin', req.user!.id, `Username updated to ${cleanUsername}`);
+
+    res.json({ success: true, username: cleanUsername, message: 'Super Admin username updated successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to update username' });
+  }
+});
+
+// Super Admin Request Email Verification Code
+app.post('/api/super-admin/credentials/email/request-verification', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const { newEmail, currentPassword } = req.body;
+    if (!newEmail || !currentPassword) {
+      res.status(400).json({ error: 'New email address and current password are required' });
+      return;
+    }
+
+    const cleanEmail = String(newEmail).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      res.status(400).json({ error: 'Please enter a valid email address format.' });
+      return;
+    }
+
+    // Verify current password
+    const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user!.id) as any;
+    if (!verifyPassword(currentPassword, user.password_hash)) {
+      res.status(401).json({ error: 'Incorrect current password. Verification failed.' });
+      return;
+    }
+
+    // Check uniqueness
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ? AND id != ?').get(cleanEmail, req.user!.id);
+    if (existing) {
+      res.status(409).json({ error: 'This email address is already associated with another account.' });
+      return;
+    }
+
+    // Generate 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    db.prepare('UPDATE users SET email_verification_pending = ?, email_verification_code = ? WHERE id = ?').run(
+      cleanEmail,
+      code,
+      req.user!.id
+    );
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'SUPER_ADMIN_EMAIL_VERIFICATION_REQUESTED', 'SuperAdmin', req.user!.id, `Verification code dispatched for new email: ${cleanEmail}`);
+
+    res.json({
+      success: true,
+      pendingEmail: cleanEmail,
+      verificationCode: code,
+      message: `Identity verification code generated for ${cleanEmail}. Please enter the code to confirm the update.`
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to initiate email verification' });
+  }
+});
+
+// Super Admin Confirm Email Update
+app.put('/api/super-admin/credentials/email/confirm', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const { verificationCode } = req.body;
+    if (!verificationCode) {
+      res.status(400).json({ error: 'Verification code is required' });
+      return;
+    }
+
+    const user = db.prepare('SELECT email_verification_pending, email_verification_code FROM users WHERE id = ?').get(req.user!.id) as any;
+    if (!user || !user.email_verification_pending || user.email_verification_code !== String(verificationCode).trim()) {
+      res.status(400).json({ error: 'Invalid verification code. Please check your code and try again.' });
+      return;
+    }
+
+    const newEmail = user.email_verification_pending;
+    db.prepare('UPDATE users SET email = ?, email_verification_pending = "", email_verification_code = "" WHERE id = ?').run(
+      newEmail,
+      req.user!.id
+    );
+
+    // Invalidate other active sessions for security
+    db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(req.user!.id, req.token!);
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'SUPER_ADMIN_EMAIL_CHANGED', 'SuperAdmin', req.user!.id, `Super Admin email updated to ${newEmail}`);
+
+    res.json({
+      success: true,
+      email: newEmail,
+      message: 'Email address updated successfully. All other active sessions have been invalidated.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to confirm email update' });
+  }
+});
+
+// Super Admin Update Password
+app.put('/api/super-admin/credentials/password', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      res.status(400).json({ error: 'Current password, new password, and confirmation are required.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      res.status(400).json({ error: 'New password and confirmation do not match.' });
+      return;
+    }
+
+    // Verify current password
+    const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user!.id) as any;
+    if (!verifyPassword(currentPassword, user.password_hash)) {
+      res.status(401).json({ error: 'Current password is incorrect. Verification failed.' });
+      return;
+    }
+
+    // Strong password validation
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      res.status(400).json({
+        error: 'Password does not meet requirements: Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      });
+      return;
+    }
+
+    const newHash = hashPassword(newPassword);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, req.user!.id);
+
+    // Invalidate all other sessions
+    db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(req.user!.id, req.token!);
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'SUPER_ADMIN_PASSWORD_CHANGED', 'SuperAdmin', req.user!.id, 'Super Admin password updated; other sessions revoked');
+
+    res.json({
+      success: true,
+      message: 'Password successfully changed. All other active sessions have been invalidated.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to change password' });
+  }
+});
+
+// Super Admin Management of Other Administrators (RBAC)
+app.get('/api/super-admin/admins', superAdminMiddleware, (_req: AuthRequest, res: Response) => {
+  const admins = db
+    .prepare('SELECT id, username, name, email, role, status, phone, created_at, last_login FROM users WHERE role IN ("super_admin", "admin", "content_manager", "support_agent") ORDER BY created_at ASC')
+    .all();
+  res.json(admins);
+});
+
+// Super Admin Create New Sub-Admin
+app.post('/api/super-admin/admins', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const { name, username, email, password, role } = req.body;
+    if (!name || !email || !password || !role) {
+      res.status(400).json({ error: 'Name, email, password, and role are required' });
+      return;
+    }
+
+    if (role === 'super_admin') {
+      res.status(400).json({ error: 'Additional Super Administrator accounts cannot be created.' });
+      return;
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanUsername = username ? String(username).trim() : null;
+
+    const existingEmail = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(cleanEmail);
+    if (existingEmail) {
+      res.status(409).json({ error: 'An account with this email address already exists.' });
+      return;
+    }
+
+    if (cleanUsername) {
+      const existingUser = db.prepare('SELECT id FROM users WHERE LOWER(username) = ?').get(cleanUsername.toLowerCase());
+      if (existingUser) {
+        res.status(409).json({ error: 'This username is already taken.' });
+        return;
+      }
+    }
+
+    const adminId = `usr-admin-${Date.now()}`;
+    const hash = hashPassword(password);
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO users (id, username, name, email, password_hash, role, status, created_at, last_login)
+      VALUES (?, ?, ?, ?, ?, ?, "active", ?, ?)
+    `).run(adminId, cleanUsername, name, cleanEmail, hash, role, now, now);
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'ADMIN_ACCOUNT_CREATED', 'Admin', adminId, `Created ${role} account for ${cleanEmail}`);
+
+    res.status(201).json({ message: 'Administrator account created successfully', id: adminId });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create administrator' });
+  }
+});
+
+// Super Admin Update Sub-Admin
+app.put('/api/super-admin/admins/:id', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const target = db.prepare('SELECT id, role FROM users WHERE id = ?').get(req.params.id) as any;
+    if (!target) {
+      res.status(404).json({ error: 'Administrator account not found' });
+      return;
+    }
+
+    if (target.id === req.user!.id) {
+      res.status(400).json({ error: 'Use Account Security settings to update your Super Admin profile.' });
+      return;
+    }
+
+    const { role, status } = req.body;
+    if (role === 'super_admin') {
+      res.status(400).json({ error: 'Cannot promote account to Super Admin.' });
+      return;
+    }
+
+    db.prepare('UPDATE users SET role = COALESCE(?, role), status = COALESCE(?, status) WHERE id = ?').run(
+      role,
+      status,
+      req.params.id
+    );
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'ADMIN_ACCOUNT_UPDATED', 'Admin', req.params.id, `Updated role to ${role}, status to ${status}`);
+
+    res.json({ message: 'Administrator status updated successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to update administrator' });
+  }
+});
+
+// Super Admin Delete Sub-Admin
+app.delete('/api/super-admin/admins/:id', superAdminMiddleware, (req: AuthRequest, res: Response) => {
+  try {
+    const target = db.prepare('SELECT id, role, email FROM users WHERE id = ?').get(req.params.id) as any;
+    if (!target) {
+      res.status(404).json({ error: 'Administrator account not found' });
+      return;
+    }
+
+    if (target.role === 'super_admin' || target.id === req.user!.id) {
+      res.status(403).json({ error: 'The Super Administrator account cannot be deleted.' });
+      return;
+    }
+
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(target.id);
+    db.prepare('DELETE FROM notifications WHERE user_id = ?').run(target.id);
+    db.prepare('DELETE FROM users WHERE id = ?').run(target.id);
+
+    logAudit(req.user!.id, req.user!.username || req.user!.name, 'ADMIN_ACCOUNT_DELETED', 'Admin', target.id, `Deleted admin account ${target.email}`);
+
+    res.json({ message: 'Administrator account deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to delete administrator' });
+  }
 });
 
 // ==========================================

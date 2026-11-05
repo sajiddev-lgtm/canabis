@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PRODUCTS_DATA, BRANDS_DIRECTORY, ProductItem, BrandItem } from '../data/cannabisData';
+import { PRODUCTS_DATA, BRANDS_DIRECTORY, BLOG_POSTS, ProductItem, BrandItem } from '../data/cannabisData';
+import { SUPER_ADMIN_PORTAL_PATH } from '../config/adminConfig';
 
 export type PageRoute =
   | 'home'
@@ -14,6 +15,7 @@ export type PageRoute =
   | 'brands'
   | 'brand-detail'
   | 'flower-farms'
+  | 'flower'
   | 'edibles'
   | 'vapes'
   | 'blog'
@@ -21,16 +23,19 @@ export type PageRoute =
   | 'faq'
   | 'contact'
   | 'privacy'
+  | 'legal'
   | 'terms'
   | 'cookies'
   | 'responsible-use'
   | 'login'
   | 'register'
   | 'dashboard'
-  | 'admin';
+  | 'admin'
+  | 'super-admin-portal';
 
 export interface UserAccount {
   id: string;
+  username?: string;
   name: string;
   email: string;
   role: 'super_admin' | 'admin' | 'content_manager' | 'support_agent' | 'customer';
@@ -129,6 +134,25 @@ interface AppContextType {
   notifications: NotificationItem[];
   fetchNotifications: () => Promise<void>;
   markNotificationRead: (id: string) => Promise<void>;
+
+  // Compatibility Aliases for components
+  brands: BrandItem[];
+  products: ProductItem[];
+  blogPosts: any[];
+  savedProductIds: string[];
+  toggleSaveProduct: (id: string) => void;
+  selectedProduct: ProductItem | null;
+  openProductModal: (prod: any) => void;
+  closeProductModal: () => void;
+  settings: {
+    siteName: string;
+    contactEmail: string;
+    email: string;
+    phone: string;
+    address: string;
+    canGRegNumber: string;
+    operatingHours: string;
+  };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -136,7 +160,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Navigation state
   const [currentPage, setCurrentPage] = useState<PageRoute>(() => {
-    if (window.location.pathname === '/admin') return 'admin';
+    if (typeof window !== 'undefined') {
+      if (
+        window.location.pathname === SUPER_ADMIN_PORTAL_PATH ||
+        window.location.search.includes('portal=super-admin') ||
+        window.location.hash === '#super-admin'
+      ) {
+        return 'super-admin-portal';
+      }
+      if (window.location.pathname === '/admin') return 'admin';
+    }
     return 'home';
   });
   const [pageParam, setPageParam] = useState<string | null>(null);
@@ -528,7 +561,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const navigateTo = (page: PageRoute, param: string | null = null) => {
     setCurrentPage(page);
     setPageParam(param);
-    if (page === 'admin') {
+    if (page === 'super-admin-portal') {
+      window.history.pushState({}, '', SUPER_ADMIN_PORTAL_PATH);
+    } else if (page === 'admin') {
       window.history.pushState({}, '', '/admin');
     } else if (page === 'product-detail' && param) {
       window.history.pushState({}, '', `/?product=${param}`);
@@ -589,6 +624,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         fetchNotifications,
         markNotificationRead,
+        // Compatibility Aliases
+        brands: BRANDS_DIRECTORY,
+        products: allProducts,
+        blogPosts: BLOG_POSTS,
+        savedProductIds: savedItemIds,
+        toggleSaveProduct: toggleSaveItem,
+        selectedProduct: null,
+        openProductModal: (prod: any) => navigateTo('product-detail', prod?.id || prod),
+        closeProductModal: () => {},
+        settings: {
+          siteName: 'Canabis Hub Germany',
+          contactEmail: 'compliance@canabishub.de',
+          email: 'compliance@canabishub.de',
+          phone: '+49 30 8920 4401',
+          address: 'Friedrichstraße 176-179, 10117 Berlin, Germany',
+          canGRegNumber: 'DE-BLN-CanG-2024-8841',
+          operatingHours: 'Mon - Fri: 09:00 - 18:00 CET',
+        },
       }}
     >
       {children}

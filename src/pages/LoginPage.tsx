@@ -112,16 +112,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const fillAdminCredentials = () => {
-    setEmail('admin@canabishub.de');
-    setPassword('Admin@2026!');
-  };
-
-  const fillMemberCredentials = () => {
-    setEmail('user@canabishub.de');
-    setPassword('User@2026!');
-  };
-
   return (
     <div className="max-w-md mx-auto px-4 py-16">
       <div className="p-8 rounded-3xl bg-white dark:bg-[#073B2E] border border-[#E9EDE7] dark:border-emerald-800 shadow-xl space-y-6">
@@ -136,36 +126,11 @@ export const LoginPage: React.FC = () => {
             {mode === 'reset' && 'Reset Account Password'}
           </h2>
           <p className="text-xs text-[#68756F] dark:text-emerald-200/70">
-            {mode === 'login' && 'Access certified monographs, saved cultivars, and administrator tools.'}
+            {mode === 'login' && 'Access certified monographs, saved cultivars, and member tools.'}
             {mode === 'register' && 'Join Germany’s leading verified cannabis monograph community.'}
-            {mode === 'reset' && 'Enter your registered email and administrative authorization code.'}
+            {mode === 'reset' && 'Enter your registered email and authorization code.'}
           </p>
         </div>
-
-        {/* Quick Demo Credentials Assistant */}
-        {mode === 'login' && (
-          <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs space-y-2">
-            <span className="font-bold text-[#07543F] dark:text-[#F28A19] block text-[11px] uppercase tracking-wider">
-              Quick Test Credentials:
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={fillAdminCredentials}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 font-bold text-[11px] text-[#07543F] dark:text-emerald-200 hover:border-[#07543F]"
-              >
-                Fill Super Admin
-              </button>
-              <button
-                type="button"
-                onClick={fillMemberCredentials}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 font-bold text-[11px] text-[#07543F] dark:text-emerald-200 hover:border-[#07543F]"
-              >
-                Fill Member User
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Alerts */}
         {errorMsg && (
@@ -194,7 +159,7 @@ export const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#E9EDE7] dark:border-emerald-800 bg-[#FFFDF8] dark:bg-emerald-950/40"
-                  placeholder="admin@canabishub.de"
+                  placeholder="name@domain.de"
                 />
               </div>
             </div>
@@ -327,22 +292,19 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-[#E9EDE7] dark:border-emerald-800 bg-[#FFFDF8] dark:bg-emerald-950/40"
-                placeholder="admin@canabishub.de"
+                placeholder="member@domain.de"
               />
             </div>
 
             <div className="space-y-1">
-              <div className="flex justify-between">
-                <label className="font-bold text-[#263A36] dark:text-emerald-100">Admin Authorization Code</label>
-                <span className="text-[10px] text-slate-500">Default: CANABIS-ADMIN-2026</span>
-              </div>
+              <label className="font-bold text-[#263A36] dark:text-emerald-100">Verification Code</label>
               <input
                 type="text"
                 required
                 value={resetCode}
                 onChange={(e) => setResetCode(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-[#E9EDE7] dark:border-emerald-800 bg-[#FFFDF8] dark:bg-emerald-950/40 font-mono"
-                placeholder="CANABIS-ADMIN-2026"
+                placeholder="Enter 6-digit code"
               />
             </div>
 

@@ -198,7 +198,7 @@ export const ProductDetailModal: React.FC = () => {
                   className="flex-1 py-3 px-4 rounded-xl bg-[#F28A19] hover:bg-[#d9770e] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Cart (€{selectedProduct.price.toFixed(2)})</span>
+                  <span>Add to Cart (€{(selectedProduct.price ?? 0).toFixed(2)})</span>
                 </button>
               ) : (
                 <div className="flex-1 flex items-center justify-end text-xs text-emerald-700 dark:text-emerald-300 font-semibold gap-1">

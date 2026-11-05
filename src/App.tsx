@@ -31,12 +31,18 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { UserDashboardPage } from './pages/UserDashboardPage';
 import { AdminPage } from './pages/AdminPage';
+import { SuperAdminPortal } from './pages/SuperAdminPortal';
 import { WhatsAppSupport } from './components/WhatsAppSupport';
 
 const AppContent: React.FC = () => {
   const { currentPage, wishlistFeedback } = useApp();
 
-  // If in dedicated admin dashboard, render AdminPage full screen without consumer header/footer
+  // If in dedicated Super Admin portal, render SuperAdminPortal full screen isolated from public site
+  if (currentPage === 'super-admin-portal') {
+    return <SuperAdminPortal />;
+  }
+
+  // If in standard admin dashboard, render AdminPage full screen without consumer header/footer
   if (currentPage === 'admin') {
     return (
       <div className="min-h-screen bg-[#041F18] text-white">

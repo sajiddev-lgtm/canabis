@@ -16,7 +16,15 @@ export interface BrandItem {
   labVerified: boolean;
   founded: string;
   signatureProducts: string[];
+  // Compatibility fields
+  slug?: string;
+  category_key?: string;
+  category_label?: string;
+  lab_verified?: boolean;
+  signature_products?: string[];
 }
+
+export type CannabisBrand = BrandItem;
 
 export interface MegaMenuColumn {
   title: string;
@@ -114,6 +122,10 @@ export interface ProductItem {
   isFeatured?: boolean;
   specifications?: Record<string, string>;
   faq?: { question: string; answer: string }[];
+  // Compatibility fields
+  category_slug?: string;
+  brand_slug?: string;
+  lab_batch?: string;
 }
 
 export const CATEGORIES_DATA = [
@@ -183,7 +195,7 @@ export const CATEGORIES_DATA = [
   },
 ];
 
-export const PRODUCTS_DATA: ProductItem[] = [
+const RAW_PRODUCTS_DATA: ProductItem[] = [
   // --- 1. Informational Cannabis Cultivars & Concentrates (Non-Commercial Monographs) ---
   {
     id: 'prod-1',
@@ -1160,7 +1172,14 @@ export const PRODUCTS_DATA: ProductItem[] = [
   },
 ];
 
-export const BRANDS_DIRECTORY: BrandItem[] = [
+export const PRODUCTS_DATA: ProductItem[] = RAW_PRODUCTS_DATA.map((p) => ({
+  ...p,
+  category_slug: p.categorySlug,
+  brand_slug: p.brandSlug,
+  lab_batch: p.labBatch,
+}));
+
+const RAW_BRANDS_DIRECTORY: BrandItem[] = [
   // COLUMN 1: NEW BRANDS!
   {
     id: 'cosmic-concentrates',
@@ -1592,6 +1611,15 @@ export const BRANDS_DIRECTORY: BrandItem[] = [
   },
 ];
 
+export const BRANDS_DIRECTORY: BrandItem[] = RAW_BRANDS_DIRECTORY.map((b) => ({
+  ...b,
+  slug: b.id,
+  category_key: b.category,
+  category_label: b.categoryLabel,
+  lab_verified: b.labVerified,
+  signature_products: b.signatureProducts,
+}));
+
 export const EXPERIENCE_CARDS = [
   {
     title: 'Certified Lab Testing',
@@ -1864,4 +1892,37 @@ export const HERO_SLIDES = [
     backgroundImage: '/src/assets/images/delivery_fleet_retail_1793700802596.jpg',
     tag: 'Discreet Climate-Controlled Transit',
   },
+];
+
+export const CANG_LEGAL_SECTIONS = [
+  {
+    code: 'CanG § 2 & § 3',
+    title: 'Personal Possession & Private Cultivation',
+    summary: 'Decriminalization provisions established under federal law effective April 1, 2024.',
+    points: [
+      'Adults (18+) may legally possess up to 25g of dried cannabis in public spaces.',
+      'Up to 50g of dried cannabis permitted within private domestic residences.',
+      'Simultaneous private cultivation of up to 3 flowering female cannabis plants per adult.'
+    ]
+  },
+  {
+    code: 'CanG § 13 & § 14',
+    title: 'Non-Commercial Cultivation Associations',
+    summary: 'Framework governing non-profit social clubs (Anbauvereinigungen).',
+    points: [
+      'Membership capped at 500 verified adult residents of Germany.',
+      'Strict prohibition of commercial sales, direct delivery, or mail-order distribution.',
+      'Rigorous record-keeping and mandatory youth protection distance zones (200m).'
+    ]
+  },
+  {
+    code: 'Ph. Eur. 2.8.20',
+    title: 'Pharmaceutical Quality & Lab Monograph Testing',
+    summary: 'Standardized microbiological, chemical, and cannabinoid analytical testing.',
+    points: [
+      'Mandatory heavy metal limits (Lead < 5.0 ppm, Cadmium < 0.5 ppm, Mercury < 0.1 ppm).',
+      'Absence of synthetic cannabinoids, mycotoxins, aflatoxins, and unapproved pesticides.',
+      'Accredited ISO/IEC 17025 third-party European laboratory certificates of analysis (COA).'
+    ]
+  }
 ];

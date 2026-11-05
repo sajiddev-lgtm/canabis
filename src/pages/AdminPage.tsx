@@ -159,7 +159,7 @@ export const AdminPage: React.FC = () => {
                 required
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@canabishub.de"
+                placeholder="staff@canabishub.de"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#073B2E] border border-white/10 text-sm text-white focus:outline-none focus:border-[#F28A19]"
               />
             </div>
@@ -183,18 +183,6 @@ export const AdminPage: React.FC = () => {
               Authenticate & Enter Admin Console
             </button>
           </form>
-
-          <div className="pt-2">
-            <button
-              onClick={() => {
-                setAdminEmail('admin@canabishub.de');
-                setAdminPassword('Admin@CanabisHub2026!');
-              }}
-              className="text-[11px] text-[#F28A19] hover:underline font-semibold"
-            >
-              Fill Demo Super Admin Credentials
-            </button>
-          </div>
         </div>
       </div>
     );
